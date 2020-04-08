@@ -1,3 +1,7 @@
+export interface AwsConfig {
+    aws_profile: string;
+    account_id: string;
+}
 
 export interface ProjectConfig {
     name: string;
