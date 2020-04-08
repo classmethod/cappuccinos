@@ -3,6 +3,14 @@ import * as YAML from 'yaml';
 import { ProjectConfig, AwsConfig } from './types';
 import { Blob } from 'aws-sdk/lib/dynamodb/document_client';
 
+export const sleep = async (msec: number) => {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve();
+        }, msec);
+    })
+}
+
 export const loadYaml = async (path: string): Promise<any> => {
     try {
         const doc = await fs.readFile(path, 'utf8');
