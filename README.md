@@ -1,3 +1,14 @@
+# Commands overview
+
+- layers build <env> [layer]              Build layers.                      
+- layers deploy <env> [layer]             Deploy layers.                     
+- functions build <env> [function]        Build a specific function.         
+- functions deploy <env> [function]       Deploy a specific function.        
+- functions invoke <env> <function>       Invoke a specific function.        
+- functions publish <env> [function]      Publish function.                  
+- api doc <env> [api]                     Make APIs document                 
+- api deploy <env>                        Deploy APIs                        
+
 # Requirements
 
 - node.js 
