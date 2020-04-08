@@ -41,6 +41,10 @@ const apiArgValidator = (arg) => {
   return arg;
 };
 
+const changeLogLevel = (logger, level) => {
+  Object.keys(logger.transports).forEach(t => logger.transports[t].level = level)
+};
+
 prog
   .version('0.0.1')
   .description('deploy and publish AWS Lambda functions and API Gateway.')
@@ -88,6 +92,58 @@ prog
       await functions.buildFunction(funcPath);
     } else {
       await functions.buildAll();
+    }
+  })
+  .command('functions deploy', 'Deploy a specific function.')
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .argument('[function]', 'target function to deploy', functionArgValidator)
+  .option('--rebuild', 'clean and full build')
+  .option('--ignore-profile', 'ignore aws profile')
+  .action(async (args, options, logger) => {
+    logger.info(`[Deployment Function]`);
+    const functions = await newFunctions(args.env, options, logger);
+    await functions.cleanup();
+    if (args.function) {
+      const funcPath = utils.toFunctionPath(args.function);
+      await functions.deployFunction(funcPath);
+    } else {
+      await functions.deployAll();
+    }
+  })
+  .command('functions invoke', 'Invoke a specific function.')
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .argument('<function>', 'target function to invoke', functionArgValidator)
+  .option('--event <event>', 'input payload file')
+  .option('--vars <params>', 'override payload variables')
+  .option('--alias <alias_name>', 'Alias name of function.', ['current', 'stable'])
+  .option('--tail', 'output trail log')
+  .option('--json', 'output JSON only')
+  .action(async (args, options, logger) => {
+    if (options.json) changeLogLevel(logger, 'warn');
+    logger.info(`[Invoke Function]`);
+    const extraVars = (() => {
+      const val = (v) => {
+        if (v.match(/^[0-9]+$/)) return Number(v);
+        if (v.match(/^(true|false)$/)) return (v === 'true') ? true : false;
+        return v;
+      };
+      const result = {};
+      if (Array.isArray(options.vars)) {
+        options.vars.forEach(v => {
+          const tokens = v.split('=');
+          result[tokens[0]] = val(tokens[1]);
+        });
+      } else if (options.vars) {
+        const tokens = options.vars.split('=');
+        result[tokens[0]] = val(tokens[1]);
+      }
+      return result;
+    })();
+    const functions = await newFunctions(args.env, options, logger);
+    const result = await functions.invokeFunction(utils.toFunctionPath(args.function), extraVars, options.event);
+    if (options.json) {
+      changeLogLevel(logger, 'info');
+      logger.info(JSON.stringify(result, null, 2));
     }
   })
 ;
