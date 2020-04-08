@@ -8,6 +8,7 @@ export interface ProjectConfig {
     functions: FunctionsConfig;
     layers: LayersConfig[];
     shared: SharedConfig[];
+    apis: string[];
 }
 
 export interface FunctionsConfig {
