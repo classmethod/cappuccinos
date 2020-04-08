@@ -13,17 +13,15 @@ export class Layers {
     logger: any;
     buidDir: string;
     projectConfig: ProjectConfig;
-    accountId: string;
     dryRun: boolean;
     lambda: AWS.Lambda;
 
-    constructor(env: string, options: any, logger: any, config: ProjectConfig, accountId: string) {
+    constructor(env: string, options: any, logger: any, config: ProjectConfig) {
         this.logger = logger;
         this.env = env;
         this.options = options;
         this.buidDir = './build/layers';
         this.projectConfig = config;
-        this.accountId = accountId;
         this.dryRun = this.options.dryRun;
         this.lambda = new AWS.Lambda();
     }
