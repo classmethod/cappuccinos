@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import * as YAML from 'yaml';
-import { ProjectConfig } from './types';
+import { ProjectConfig, AwsConfig } from './types';
 
 export const loadYaml = async (path: string): Promise<any> => {
     try {
@@ -41,12 +41,12 @@ export const loadProjectConfig = async (env: string): Promise<ProjectConfig> => 
     return config as ProjectConfig;
 }
 
-export const getAwsProfile = async (env: string): Promise<string> => {
+export const getAwsConfig = async (env: string): Promise<AwsConfig | undefined> => {
     const yaml = await loadYaml(`./conf/aws.yaml`);
-    if (yaml && yaml[env] && yaml[env].aws_profile) {
-        return yaml[env].aws_profile;
+    if (yaml && yaml[env]) {
+        return yaml[env];
     } else {
-        return env;
+        return undefined;
     }
 }
 
