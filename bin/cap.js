@@ -39,5 +39,21 @@ prog
       await layers.buildAll();
     }
   })
+  .command('layers deploy', 'Deploy layers.')
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .argument('[layer]', 'target layer to deploy', layerArgValidator)
+  .option('--ignore-profile', 'ignore aws profile')
+  .option('--dry-run', 'dry-run ')
+  .action(async (args, options, logger) => {
+    logger.info(`[Deploy Layers]`);
+    const layers = await newLayers(args.env, options, logger);
+    await layers.cleanup();
+    if (args.layer) {
+      await layers.deploy(args.layer);
+    } else {
+      await layers.deployAll();
+    }
+  })
+
 ;
 prog.parse(process.argv);

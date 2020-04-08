@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import * as AWS from 'aws-sdk';
 import { Process } from './Process';
 import { Archiver } from './Archiver';
 import * as utils from './utils';
@@ -12,6 +14,8 @@ export class Layers {
     buidDir: string;
     projectConfig: ProjectConfig;
     accountId: string;
+    dryRun: boolean;
+    lambda: AWS.Lambda;
 
     constructor(env: string, options: any, logger: any, config: ProjectConfig, accountId: string) {
         this.logger = logger;
@@ -20,6 +24,8 @@ export class Layers {
         this.buidDir = './build/layers';
         this.projectConfig = config;
         this.accountId = accountId;
+        this.dryRun = this.options.dryRun;
+        this.lambda = new AWS.Lambda();
     }
 
     async cleanup() {
@@ -53,4 +59,31 @@ export class Layers {
         return out;
     }
 
+    async deployAll() {
+        await Promise.all(
+            this.projectConfig.layers.map(layer => this.deploy(layer.name))
+        );
+    }
+
+    async deploy(layerName: string) {
+        const file = await this.build(layerName);
+        const latestVersion = await this.publish(layerName, this.getConf(layerName).runtimes, file);
+        this.logger.info(`  # Layer published      ${blue('layer=')}${layerName},  ${blue('version=')}${latestVersion}`);
+    }
+
+    async publish(layerName: string, runtimes: string[], file: string): Promise<number> {
+        const data = readFileSync(file);
+        const params = {
+            LayerName: layerName,
+            CompatibleRuntimes: runtimes,
+            Content: {
+                ZipFile: data
+            }
+        };
+        if (this.dryRun) return 0;
+        const ret = await this.lambda.publishLayerVersion(params).promise();
+        this.logger.debug(`${layerName}:${ret.Version}`);
+        if (ret.Version === undefined) throw new Error('publishLayerVersion is failed.');
+        return ret.Version;
+    }
 }
