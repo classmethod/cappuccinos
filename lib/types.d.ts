@@ -5,8 +5,20 @@ export interface AwsConfig {
 
 export interface ProjectConfig {
     name: string;
+    functions: FunctionsConfig;
     layers: LayersConfig[];
     shared: SharedConfig[];
+}
+
+export interface FunctionsConfig {
+    paths: string[];
+    build: string[];
+    rebuild: string[];
+    files: IFile[];
+    configuration: LambdaConfig;
+}
+
+export interface LambdaConfig {
 }
 
 export interface SharedConfig {
