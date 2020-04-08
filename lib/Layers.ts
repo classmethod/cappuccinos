@@ -52,7 +52,8 @@ export class Layers {
         new Process(this.logger).execCommand(conf.build, opts);
         const out = `${this.buidDir}/${layerName}-${this.env}.zip`;
         const archiver = new Archiver(this.logger);
-        await archiver.zip(out, `./layers/${layerName}`, conf.files);
+        archiver.append(`./layers/${layerName}`, conf.files);
+        await archiver.zip(out);
         this.logger.info(`  # Build layer      ${blue('layer=')}${layerName}`);
         return out;
     }
