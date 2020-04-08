@@ -2,7 +2,8 @@
 process.env.AWS_SDK_LOAD_CONFIG = 1;
 const fs = require('fs');
 const prog = require('caporal');
-const { newLayers } = require('../lib/Cappuccinos');
+const { newLayers, newFunctions } = require('../lib/Cappuccinos');
+const utils = require('../lib/utils');
 
 const envArgValidator = (arg) => {
   try {
@@ -18,6 +19,24 @@ const layerArgValidator = (arg) => {
     fs.statSync(`./layers/${arg}`);
   } catch (err) {
     throw new Error(`Can not find layer path ./layers/${arg}`);
+  }
+  return arg;
+};
+
+const functionArgValidator = (arg) => {
+  try {
+    fs.statSync(`./functions/${utils.toFunctionPath(arg)}`);
+  } catch (err) {
+    throw new Error(`Can not find function path ./functions/${utils.toFunctionPath(arg)}`);
+  }
+  return arg;
+};
+
+const apiArgValidator = (arg) => {
+  try {
+    fs.statSync(`./apis/${arg}/swagger.yaml`);
+  } catch (err) {
+    throw new Error(`Can not find api path ./apis/${arg}/swagger.yaml`);
   }
   return arg;
 };
@@ -54,6 +73,22 @@ prog
       await layers.deployAll();
     }
   })
-
+  .command('functions build', 'Build a specific function.')
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .argument('[function]', 'target function to deploy', functionArgValidator)
+  .option('--rebuild', 'clean and full build')
+  .option('--ignore-profile', 'ignore aws profile')
+  .option('--dry-run', 'dry-run ')
+  .action(async (args, options, logger) => {
+    logger.info(`[Build Function]`);
+    const functions = await newFunctions(args.env, options, logger);
+    await functions.cleanup();
+    if (args.function) {
+      const funcPath = utils.toFunctionPath(args.function);
+      await functions.buildFunction(funcPath);
+    } else {
+      await functions.buildAll();
+    }
+  })
 ;
 prog.parse(process.argv);
