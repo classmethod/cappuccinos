@@ -11,20 +11,20 @@ export class Archiver {
         this.logger = logger;
     }
 
-    async zip(outPath: string, basePath: string, files: IFile[]) {
-        const targets = files.map(file => {
-            this.logger.debug(file);
+    async zip(outPath: string, basePath: string, iFiles: IFile[]) {
+        const targets = iFiles.map(iFile => {
+            this.logger.debug(iFile);
             const opts = {
-                cwd: file.base_dir ? `${basePath}/${file.base_dir}` : basePath
+                cwd: iFile.base_dir ? `${basePath}/${iFile.base_dir}` : basePath
             }; // ignore: this.ignore
             this.logger.debug(opts);
-            const sources = glob(file.source, opts);
+            const sources = glob(iFile.source, opts);
             this.logger.debug(sources);
             return sources
                 .filter(source => !statSync(`${opts.cwd}/${source}`).isDirectory())
                 .map(source => ({
                     source: `${opts.cwd}/${source}`,
-                    name: `${file.destination}${`${opts.cwd}/${source}`.replace(opts.cwd, '')}`
+                    name: `${iFile.destination}${`${opts.cwd}/${source}`.replace(opts.cwd, '')}`
                 })
             );
         }).flat();
