@@ -94,7 +94,7 @@ export class Functions {
             this.prepareDeploy()
         ]);
         await Promise.all(
-            functions.map(func => this.build(func))
+            functions.map(func => this.deploy(func))
         );
     }
 
