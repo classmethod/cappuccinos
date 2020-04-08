@@ -11,24 +11,31 @@ export const sleep = async (msec: number) => {
     })
 }
 
-export const loadYaml = async (path: string): Promise<any> => {
+export const loadYaml = async (path: string, transformer?: Function): Promise<any> => {
     try {
         const doc = await fs.readFile(path, 'utf8');
-        return YAML.parse(doc);
+        if (transformer) {
+            return YAML.parse(transformer.call(transformer, doc));
+        } else {
+            return YAML.parse(doc);
+        }
     } catch (err) {
         return undefined;
     }
 }
 
-export const loadProjectConfig = async (env: string): Promise<ProjectConfig> => {
-    const config = await loadYaml(`./conf/project.yaml`);
-    const envConf = await loadYaml(`./conf/${env}/project.yaml`);
+export const loadProjectConfig = async (env: string, awsConfig: AwsConfig): Promise<ProjectConfig> => {
+    const transformer = (doc: string) => {
+        return doc.replace(/\$\{AWS::AccountId\}/g, awsConfig.account_id);
+    };
+    const config = await loadYaml(`./conf/project.yaml`, transformer);
+    const envConf = await loadYaml(`./conf/${env}/project.yaml`, transformer);
     if (envConf) {
         Object.keys(envConf).map(key => {
             config[key] = envConf[key];
         });
     }
-    const functionsEnvConf = await loadYaml(`./conf/${env}/functions.yaml`);
+    const functionsEnvConf = await loadYaml(`./conf/${env}/functions.yaml`, transformer);
     if (functionsEnvConf) {
         const functionsConf = config.functions.configuration;
         Object.keys(functionsEnvConf).map(key => {

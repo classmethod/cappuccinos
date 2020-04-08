@@ -1,5 +1,5 @@
 export interface AwsConfig {
-    aws_profile: string;
+    aws_profile?: string;
     account_id: string;
 }
 

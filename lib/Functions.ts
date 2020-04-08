@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import * as AWS from 'aws-sdk';
 import { Process } from './Process';
-import { ProjectConfig, LambdaConfig } from './types';
+import { ProjectConfig, LambdaConfig, AwsConfig } from './types';
 import { Archiver } from './Archiver';
 import * as utils from './utils';
 import { blue } from 'colorette';
@@ -13,16 +13,18 @@ export class Functions {
     logger: any;
     buidDir: string;
     projectConfig: ProjectConfig;
+    awsConfig: AwsConfig;
     dryRun: boolean;
     lambda: AWS.Lambda;
     layerArns: { [key: string]: string } = {};
 
-    constructor(env: string, options: any, logger: any, config: ProjectConfig) {
+    constructor(env: string, options: any, logger: any, config: ProjectConfig, awsConfig: AwsConfig) {
         this.logger = logger;
         this.env = env;
         this.options = options;
         this.buidDir = './build/functions';
         this.projectConfig = config;
+        this.awsConfig = awsConfig;
         this.dryRun = this.options.dryRun;
         this.lambda = new AWS.Lambda();
     }
