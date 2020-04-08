@@ -146,5 +146,21 @@ prog
       logger.info(JSON.stringify(result, null, 2));
     }
   })
+  .command('functions publish', 'Publish function.')
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .argument('[function]', 'target function to deploy', functionArgValidator)
+  .option('--alias-name <value>', 'Alias name to publish.', ['current', 'stable'], 'current')
+  // .option('--force', 'force to publish as new version')
+  .option('--ignore-profile', 'ignore aws profile')
+  .action(async (args, options, logger) => {
+    logger.info(`[Publish Function]`);
+    const functions = await newFunctions(args.env, options, logger);
+    const alias = options.aliasName;
+    if (args.function) {
+      await functions.publish(utils.toFunctionPath(args.function), alias);
+    } else {
+      await functions.publishAll(alias);
+    }
+  })
 ;
 prog.parse(process.argv);

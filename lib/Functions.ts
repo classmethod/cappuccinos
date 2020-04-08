@@ -267,4 +267,76 @@ export class Functions {
         return result;
     }
 
+    async publishAll(alias: string) {
+        const functions = await utils.listFunctions(this.projectConfig.functions.paths);
+        for (let i = 0, len = functions.length; i < len; i++ ) {
+            await this.publish(functions[i], alias);
+            await utils.sleep(500);
+        }
+        this.logger.info();
+    }
+
+    async publish(func: string, alias: string) {
+        const functionName = utils.toFunctionName(func);
+        const version = await this.publishVersion(functionName);
+        const aliasVersion = await this.getAlias(functionName, alias);
+        this.logger.debug(aliasVersion);
+        if (aliasVersion === undefined) {
+            await this.createAlias(functionName, version, alias);
+        } else if (version !== aliasVersion) {
+            await this.updateAlias(functionName, version, alias);
+        } else {
+            this.logger.info(`  # Alias unchanged      ${blue('function=')}${functionName}, ${blue('version=')}${version}, ${blue('alias=')}${alias}`);
+        }
+    } 
+    
+    async publishVersion(functionName: string) {
+        const params = {
+            FunctionName: functionName
+        };
+        const resp = await this.lambda.publishVersion(params).promise();
+        this.logger.debug(JSON.stringify(resp, null, 2));
+        if (resp.Version === undefined) throw new Error('Unkown Version.');
+        this.logger.info(`  # Function published   ${blue('function=')}${functionName}, ${blue('version=')}${resp.Version}`);
+        return resp.Version;
+    }
+
+    async getAlias(functionName: string, alias: string) {
+        try {
+            const params = {
+                FunctionName: functionName,
+                Name: alias
+            };
+            const resp = await this.lambda.getAlias(params).promise();
+            this.logger.debug(JSON.stringify(resp, null, 2));
+            return resp.FunctionVersion;
+        } catch (err) {
+            if (err.code == 'ResourceNotFoundException') return undefined;
+            throw err;
+        }
+    }
+
+    async createAlias(functionName: string, version: string, alias: string) {
+        const params = {
+            FunctionName: functionName,
+            FunctionVersion: version,
+            Name: alias
+        };
+        const resp = await this.lambda.createAlias(params).promise();
+        this.logger.debug(JSON.stringify(resp, null, 2));
+        this.logger.info(`  # Alias changed       ${blue('function=')}${functionName}, ${blue('version=')}${version}, ${blue('alias=')}${alias}`);
+        return resp.FunctionVersion;
+    }
+
+    async updateAlias(functionName: string, version: string, alias: string) {
+        const params = {
+            FunctionName: functionName,
+            FunctionVersion: version,
+            Name: alias
+        };
+        const resp = await this.lambda.updateAlias(params).promise();
+        this.logger.debug(JSON.stringify(resp, null, 2));
+        this.logger.info(`  # Alias changed       ${blue('function=')}${functionName}, ${blue('version=')}${version}, ${blue('alias=')}${alias}`);
+        return resp.FunctionVersion;
+    }
 }
