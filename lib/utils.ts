@@ -93,3 +93,16 @@ export const payloadToObject = (payload: Buffer | Uint8Array | Blob | string | u
     if (payload === undefined) return undefined;
     return JSON.parse(payload.toString());
 }
+
+export const removeExamples = (obj: any) => {
+    const rm = (obj: any) => {
+        Object.keys(obj).forEach(key => {
+            if (key == 'example') {
+                delete obj[key];
+            } else if (typeof obj[key] === 'object') {
+                rm(obj[key]);
+            }
+        });
+    };
+    Object.keys(obj).forEach(key => rm(obj[key]));
+}
