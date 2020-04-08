@@ -2,7 +2,7 @@
 process.env.AWS_SDK_LOAD_CONFIG = 1;
 const fs = require('fs');
 const prog = require('caporal');
-const { newLayers, newFunctions } = require('../lib/Cappuccinos');
+const { newLayers, newFunctions, newApis } = require('../lib/Cappuccinos');
 const utils = require('../lib/utils');
 
 const envArgValidator = (arg) => {
@@ -160,6 +160,20 @@ prog
       await functions.publish(utils.toFunctionPath(args.function), alias);
     } else {
       await functions.publishAll(alias);
+    }
+  })
+  .command('api doc', 'Make APIs document')
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .argument('[api]', 'target api to make document', apiArgValidator)
+  .option('--ignore-profile', 'ignore aws profile')
+  .action(async (args, options, logger) => {
+    logger.info(`[Document API]`);
+    const apis = await newApis(args.env, options, logger);
+    await apis.cleanup();
+    if (args.api) {
+      await apis.makeDocument(args.api);
+    } else {
+      await apis.makeDocumentAll();
     }
   })
 ;
