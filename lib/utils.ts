@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import * as YAML from 'yaml';
 import { ProjectConfig, AwsConfig } from './types';
+import { Blob } from 'aws-sdk/lib/dynamodb/document_client';
 
 export const loadYaml = async (path: string): Promise<any> => {
     try {
@@ -77,4 +78,9 @@ export const listFunctions = async (paths: string[]) => {
     return (await Promise.all(
         paths.map(path => dir(path))
     )).flat();
+}
+
+export const payloadToObject = (payload: Buffer | Uint8Array | Blob | string | undefined) => {
+    if (payload === undefined) return undefined;
+    return JSON.parse(payload.toString());
 }
