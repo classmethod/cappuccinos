@@ -36,7 +36,7 @@ export class Functions {
 
     async buildAll() {
         await this.prepareBuild();
-        const functions = await utils.listFunctions(this.projectConfig.functions.paths);
+        const functions = utils.listFunctions(this.projectConfig.functions.paths);
         await Promise.all(
             functions.map(functionPath => this.build(functionPath))
         );
@@ -90,7 +90,7 @@ export class Functions {
     }
  
     async deployAll() {
-        const functions = await utils.listFunctions(this.projectConfig.functions.paths);
+        const functions = utils.listFunctions(this.projectConfig.functions.paths);
         await Promise.all([
             this.prepareBuild(),
             this.prepareDeploy()
@@ -147,7 +147,7 @@ export class Functions {
     async getConfiguration(func: string): Promise<LambdaConfig> {
         const config = this.projectConfig.functions.configuration;
         const meregeExtConfig = async (path: string) => {
-            const extConfig = await utils.loadYaml(path);
+            const extConfig = utils.loadYaml(path);
             if (!extConfig) return;
             Object.keys(extConfig).map(key => {
                 switch (key) {
@@ -270,7 +270,7 @@ export class Functions {
     }
 
     async publishAll(alias: string) {
-        const functions = await utils.listFunctions(this.projectConfig.functions.paths);
+        const functions = utils.listFunctions(this.projectConfig.functions.paths);
         for (let i = 0, len = functions.length; i < len; i++ ) {
             await this.publish(functions[i], alias);
             await utils.sleep(500);

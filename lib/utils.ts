@@ -1,4 +1,4 @@
-import { promises as fs } from 'fs';
+import { promises as fs, readFileSync, readdirSync } from 'fs';
 import * as YAML from 'yaml';
 import { ProjectConfig, AwsConfig } from './types';
 import { Blob } from 'aws-sdk/lib/dynamodb/document_client';
@@ -11,9 +11,9 @@ export const sleep = async (msec: number) => {
     })
 }
 
-export const loadYaml = async (path: string, transformer?: Function): Promise<any> => {
+export const loadYaml = (path: string, transformer?: Function): any|undefined => {
     try {
-        const doc = await fs.readFile(path, 'utf8');
+        const doc = readFileSync(path, 'utf8');
         if (transformer) {
             return YAML.parse(transformer.call(transformer, doc));
         } else {
@@ -28,14 +28,14 @@ export const loadProjectConfig = async (env: string, awsConfig: AwsConfig): Prom
     const transformer = (doc: string) => {
         return doc.replace(/\$\{AWS::AccountId\}/g, awsConfig.account_id);
     };
-    const config = await loadYaml(`./conf/project.yaml`, transformer);
-    const envConf = await loadYaml(`./conf/${env}/project.yaml`, transformer);
+    const config = loadYaml(`./conf/project.yaml`, transformer);
+    const envConf = loadYaml(`./conf/${env}/project.yaml`, transformer);
     if (envConf) {
         Object.keys(envConf).map(key => {
             config[key] = envConf[key];
         });
     }
-    const functionsEnvConf = await loadYaml(`./conf/${env}/functions.yaml`, transformer);
+    const functionsEnvConf = loadYaml(`./conf/${env}/functions.yaml`, transformer);
     if (functionsEnvConf) {
         const functionsConf = config.functions.configuration;
         Object.keys(functionsEnvConf).map(key => {
@@ -58,7 +58,7 @@ export const loadProjectConfig = async (env: string, awsConfig: AwsConfig): Prom
 }
 
 export const getAwsConfig = async (env: string): Promise<AwsConfig | undefined> => {
-    const yaml = await loadYaml(`./conf/aws.yaml`);
+    const yaml = loadYaml(`./conf/aws.yaml`);
     if (yaml && yaml[env]) {
         return yaml[env];
     } else {
@@ -85,14 +85,8 @@ export const toFunctionPath = (functionName: string): string => {
     return functionName.replace('_', '/');
 }
 
-export const listFunctions = async (paths: string[]) => {
-    const dir = async (path: string) => {
-        const dirs = await fs.readdir(`./functions/${path}`);
-        return dirs.map(d => `${path}/${d}`);
-    };
-    return (await Promise.all(
-        paths.map(path => dir(path))
-    )).flat();
+export const listFunctions = (paths: string[]) => {
+    return paths.map( path => readdirSync(`./functions/${path}`).map(d => `${path}/${d}`)).flat();
 }
 
 export const payloadToObject = (payload: Buffer | Uint8Array | Blob | string | undefined) => {
