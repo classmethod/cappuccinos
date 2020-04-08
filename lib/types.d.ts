@@ -6,6 +6,14 @@ export interface AwsConfig {
 export interface ProjectConfig {
     name: string;
     layers: LayersConfig[];
+    shared: SharedConfig[];
+}
+
+export interface SharedConfig {
+    name: string;
+    build: string[];
+    rebuild: string[];
+    files: IFile[];
 }
 
 export interface LayersConfig {
