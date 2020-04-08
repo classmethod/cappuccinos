@@ -68,3 +68,13 @@ export const toFunctionPath = (functionName: string): string => {
     if (functionName.indexOf('/') !== -1) return functionName;
     return functionName.replace('_', '/');
 }
+
+export const listFunctions = async (paths: string[]) => {
+    const dir = async (path: string) => {
+        const dirs = await fs.readdir(`./functions/${path}`);
+        return dirs.map(d => `${path}/${d}`);
+    };
+    return (await Promise.all(
+        paths.map(path => dir(path))
+    )).flat();
+}
