@@ -6,6 +6,7 @@ export interface ProjectConfig {
 
 export interface LayersConfig {
     name: string;
+    runtimes: string[];
     build: string[];
     files: IFile[];
 }
