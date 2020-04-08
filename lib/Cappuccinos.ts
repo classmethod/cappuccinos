@@ -60,12 +60,19 @@ class Cappuccinos {
                 customBackoff: retryCount => (Math.random() * 700 + 300)
             }
         });
-        if (awsConfig) return awsConfig;
-        const accountId = await this.getAccountId();
-        this.logger.info(`AWS_ACCOUNT_ID: ${green(accountId)}`);
-        return {
-            account_id: accountId
-        };
+        const region = AWS.config.region || '';
+        if (awsConfig) {
+            this.logger.info(`AWS_ACCOUNT_ID: ${green(awsConfig.account_id)}`);
+            this.logger.info(`REGION: ${green(region)}`);
+            return awsConfig;
+        } else {
+            const accountId = await this.getAccountId();
+            this.logger.info(`AWS_ACCOUNT_ID: ${green(accountId)}`);
+            this.logger.info(`REGION: ${green(region)}`);
+            return {
+                account_id: accountId
+            };    
+        }
     }
 
     async getAccountId() {
