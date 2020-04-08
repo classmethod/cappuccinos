@@ -58,3 +58,8 @@ export const cleanupDir = async (dirPath: string) => {
     }
     await fs.mkdir(dirPath, { recursive: true });
 }
+
+export const toFunctionName = (func: string): string => {
+    if (func.indexOf('/') === 0) return func;
+    return func.split('/').join('_');
+}
