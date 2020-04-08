@@ -19,6 +19,14 @@ export interface FunctionsConfig {
 }
 
 export interface LambdaConfig {
+    description?: string;
+    runtime: string;
+    timeout: number;
+    role: string;
+    handler: string;
+    memory: number;
+    environment: { [key: string]: string; };
+    layers: string[];
 }
 
 export interface SharedConfig {
