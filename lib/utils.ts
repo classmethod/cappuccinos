@@ -63,3 +63,8 @@ export const toFunctionName = (func: string): string => {
     if (func.indexOf('/') === 0) return func;
     return func.split('/').join('_');
 }
+
+export const toFunctionPath = (functionName: string): string => {
+    if (functionName.indexOf('/') !== -1) return functionName;
+    return functionName.replace('_', '/');
+}
