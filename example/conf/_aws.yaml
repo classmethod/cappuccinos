@@ -1,0 +1,10 @@
+---
+dev:
+  aws_profile: api-dev
+  account_id: "9999999999999999"
+stg:
+  aws_profile: api-stg
+  account_id: "9999999999999999"
+prd:
+  aws_profile: api-prd
+  account_id: "9999999999999999"

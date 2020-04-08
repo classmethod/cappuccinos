@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "dependencies": {
+    "lambda-log": "2.3.1"
+  }
+}

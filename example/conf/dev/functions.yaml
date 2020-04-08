@@ -1,0 +1,3 @@
+---
+environment:
+  AWS_ACCOUNT_ID: "${AWS::AccountId}"

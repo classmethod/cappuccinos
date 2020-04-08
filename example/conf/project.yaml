@@ -1,0 +1,49 @@
+---
+name: cappuccinos
+functions:
+  paths:
+    - api
+  build:
+    - npm run compile
+  rebuild:
+    - rm -rf ./node_modules
+    - npm install
+    - npm run build
+  files:
+    - base_dir: dist
+      source: "**/*.js"
+      destination: ""
+  configuration:
+    runtime: nodejs12.x
+    timeout: 15
+    role: arn:aws:iam::${AWS::AccountId}:role/service-role/lambda
+    handler: index.handler
+    memory: 256
+    environment:
+      TZ: Asia/Tokyo
+    layers:
+      - libs
+shared:
+  - name: lib
+    build:
+      - npm run compile
+    rebuild:
+      - rm -rf ./node_modules
+      - npm install
+      - npm run build
+    files:
+      - base_dir: dist
+        source: "**/*.js"
+        destination: node_modules/lib
+layers:
+  - name: shared_modules
+    runtimes: [ nodejs12.x ]
+    build:
+     - npm install --production
+     - npm prune --production
+    files:
+     - base_dir: ""
+       source: node_modules/**
+       destination: nodejs
+apis:
+  - api
