@@ -6,13 +6,15 @@ import * as archiver from 'archiver';
 export class Archiver {
 
     logger: any;
+    files: ArchiveFile[];
 
     constructor(logger: any) {
         this.logger = logger;
+        this.files = [];
     }
 
-    async zip(outPath: string, basePath: string, iFiles: IFile[]) {
-        const targets = iFiles.map(iFile => {
+    append(basePath: string, iFiles: IFile[]) {
+        iFiles.map(iFile => {
             this.logger.debug(iFile);
             const opts = {
                 cwd: iFile.base_dir ? `${basePath}/${iFile.base_dir}` : basePath
@@ -20,14 +22,18 @@ export class Archiver {
             this.logger.debug(opts);
             const sources = glob(iFile.source, opts);
             this.logger.debug(sources);
-            return sources
+            sources
                 .filter(source => !statSync(`${opts.cwd}/${source}`).isDirectory())
-                .map(source => ({
-                    source: `${opts.cwd}/${source}`,
-                    name: `${iFile.destination}${`${opts.cwd}/${source}`.replace(opts.cwd, '')}`
-                })
-            );
-        }).flat();
+                .map(source => {
+                    this.files.push({
+                        source: `${opts.cwd}/${source}`,
+                        name: `${iFile.destination}${`${opts.cwd}/${source}`.replace(opts.cwd, '')}`
+                    });
+                });
+        });
+    }
+
+    async zip(outPath: string) {
         const output = createWriteStream(outPath);
         const zip = archiver.create('zip');
         return new Promise(resolve => {
@@ -35,11 +41,16 @@ export class Archiver {
                 resolve();
             });
             zip.pipe(output);
-            targets.map(target => {
-                zip.file(target.source, { name: target.name });
+            this.files.map(file => {
+                zip.file(file.source, { name: file.name });
             });
             zip.finalize();
         });
     }
 
+}
+
+interface ArchiveFile {
+    source: string;
+    name: string;
 }
