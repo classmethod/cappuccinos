@@ -176,5 +176,14 @@ prog
       await apis.makeDocumentAll();
     }
   })
+  .command('api deploy', 'Deploy APIs')
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .option('--ignore-profile', 'ignore aws profile')
+  .action(async (args, options, logger) => {
+    logger.info(`[Deploy API]`);
+    const apis = await newApis(args.env, options, logger);
+    await apis.cleanup();
+    await apis.deploy();
+  })
 ;
 prog.parse(process.argv);
