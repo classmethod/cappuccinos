@@ -1,0 +1,13 @@
+---
+Item:
+  type: object
+  properties:
+    item_code:
+      type: string
+      example: item_xxxx
+    item_name:
+      type: string
+      example: Test
+    raw_price:
+      type: number
+      example: 300

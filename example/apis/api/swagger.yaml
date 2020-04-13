@@ -1,0 +1,16 @@
+swagger: "2.0"
+info:
+  description: |
+    Cappuccinos Example API。
+  version: "1.0.0"
+  title: "Example API"
+host: example.jp
+basePath: /api
+tags:
+  - name: 決済
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json

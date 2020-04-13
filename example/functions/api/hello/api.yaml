@@ -1,0 +1,20 @@
+---
+/hello:
+  get:
+    operationId: api_hello
+    summary: Hello
+    responses:
+      200:
+        description: Hello
+    x-amazon-apigateway-integration:
+      type: aws_proxy
+      credentials: 
+        Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/apigateway
+      uri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:api_hello:${!stageVariables.version}/invocations
+      httpMethod: POST
+      responses:
+        default:
+          statusCode: "200"
+      passthroughBehavior: when_no_templates
+      contentHandling: CONVERT_TO_TEXT
