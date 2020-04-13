@@ -58,12 +58,7 @@ export const loadProjectConfig = async (env: string, awsConfig: AwsConfig): Prom
 }
 
 export const getAwsConfig = async (env: string): Promise<AwsConfig | undefined> => {
-    const yaml = loadYaml(`./conf/aws.yaml`);
-    if (yaml && yaml[env]) {
-        return yaml[env];
-    } else {
-        return undefined;
-    }
+    return loadYaml(`./conf/${env}/aws.yaml`);
 }
 
 export const cleanupDir = async (dirPath: string) => {
