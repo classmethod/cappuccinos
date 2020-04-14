@@ -185,5 +185,15 @@ prog
     await apis.cleanup();
     await apis.deploy();
   })
+  .command('api stage', "Deploy API's stage.")
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .option('--stage-name <value>', 'Stage name for deployment.', ['current', 'stable'], 'current')
+  .option('--ignore-profile', 'ignore aws profile')
+  .action(async (args, options, logger) => {
+    logger.info(`[Deploy API Stage]`);
+    const apis = await newApis(args.env, options, logger);
+    await apis.cleanup();
+    await apis.deployApiStages(options.stageName);
+  })
 ;
 prog.parse(process.argv);
