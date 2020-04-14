@@ -101,3 +101,7 @@ export const removeExamples = (obj: any) => {
     };
     Object.keys(obj).forEach(key => rm(obj[key]));
 }
+
+export const notUndefined = <T>(value: T | undefined): value is T => {
+    return value !== undefined;
+}
