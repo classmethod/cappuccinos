@@ -10,6 +10,7 @@
 |functions publish \<env> [function]      |Publish function.                  |
 |api doc \<env> [api]                     |Make APIs document                 |
 |api deploy \<env>                        |Deploy APIs                        |
+|api stage \<env>                         |Apply APIs to stage                |
 
 # Requirements
 
@@ -52,20 +53,14 @@ $ npm install -g spectacle-docs
 `project.yaml` と `functions.yaml` を配置してください。
 
 ### AWS環境の設定
-個人の環境に合わせ、 `./_aws.yaml` を修正し、 `./aws.yaml` として保存します（リポジトリにコミットしないこと）。
+個人の環境に合わせ、 `./conf/{env_name}/_aws.yaml` を修正し、 `./conf/{env_name}/aws.yaml` として保存します（リポジトリにコミットしないこと）。
 環境毎にAWS CLIで定義したプロファイルおよびにAWSアカウントIDを定義します。
 
 ```
 ---
-dev:
-  aws_profile: api-dev
-  account_id: "9999999999999999"
-stg:
-  aws_profile: api-stg
-  account_id: "9999999999999999"
-prd:
-  aws_profile: api-prd
-  account_id: "9999999999999999"
+aws_profile: api-dev
+account_id: "9999999999999999"
+region: ap-northeast-1
 ```
 
 ## レイヤー
