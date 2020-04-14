@@ -1,6 +1,7 @@
 export interface AwsConfig {
     aws_profile?: string;
     account_id: string;
+    region: string;
 }
 
 export interface ProjectConfig {
