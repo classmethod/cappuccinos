@@ -77,6 +77,12 @@ prog
       await layers.deployAll();
     }
   })
+  .command('functions list', 'Show all functions.')
+  .action(async (args, options, logger) => {
+    logger.info(`[List Function]`);
+    const functions = await newFunctions(args.env, options, logger);
+    await functions.list();
+  })
   .command('functions build', 'Build a specific function.')
   .argument('<env>', 'Enviroment', envArgValidator)
   .argument('[function]', 'target function to deploy', functionArgValidator)
