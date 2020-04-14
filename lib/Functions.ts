@@ -34,6 +34,15 @@ export class Functions {
         this.logger.info(`  # cleanup`);
     }
 
+    async list() {
+        const functions = utils.listFunctions(this.projectConfig.functions.paths);
+        this.logger.info(`${blue('Function names:')}`);
+        functions.map(functionPath => {
+            const functionName = utils.toFunctionName(functionPath);
+            this.logger.info(`  ${functionName}`);
+        });
+    }
+
     async buildAll() {
         await this.prepareBuild();
         const functions = utils.listFunctions(this.projectConfig.functions.paths);
