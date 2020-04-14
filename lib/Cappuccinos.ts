@@ -60,7 +60,6 @@ class Cappuccinos {
                 customBackoff: retryCount => (Math.random() * 700 + 300)
             }
         });
-        console.log(awsConfig);
         if (awsConfig) {
             if (awsConfig.account_id === undefined) awsConfig.account_id = await this.getAccountId();
             if (awsConfig.region === undefined) awsConfig.region = AWS.config.region || 'ap-northeast-1';
