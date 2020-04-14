@@ -1,4 +1,4 @@
-import { promises as fs, readFileSync, readdirSync } from 'fs';
+import { promises as fs, readFileSync, readdirSync, existsSync } from 'fs';
 import * as YAML from 'yaml';
 import { ProjectConfig, AwsConfig } from './types';
 import { Blob } from 'aws-sdk/lib/dynamodb/document_client';
@@ -81,7 +81,10 @@ export const toFunctionPath = (functionName: string): string => {
 }
 
 export const listFunctions = (paths: string[]) => {
-    return paths.map( path => readdirSync(`./functions/${path}`).map(d => `${path}/${d}`)).flat();
+    return paths.map(
+            path => readdirSync(`./functions/${path}`).map(d => `${path}/${d}`)
+        ).flat()
+         .filter(path => existsSync(`./functions/${path}/function.yaml`));
 }
 
 export const payloadToObject = (payload: Buffer | Uint8Array | Blob | string | undefined) => {
