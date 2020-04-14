@@ -60,17 +60,21 @@ class Cappuccinos {
                 customBackoff: retryCount => (Math.random() * 700 + 300)
             }
         });
-        const region = AWS.config.region || '';
+        console.log(awsConfig);
         if (awsConfig) {
+            if (awsConfig.account_id === undefined) awsConfig.account_id = await this.getAccountId();
+            if (awsConfig.region === undefined) awsConfig.region = AWS.config.region || 'ap-northeast-1';
             this.logger.info(`AWS_ACCOUNT_ID: ${green(awsConfig.account_id)}`);
-            this.logger.info(`REGION: ${green(region)}`);
+            this.logger.info(`REGION: ${green(awsConfig.region)}`);
             return awsConfig;
         } else {
+            const region = AWS.config.region || 'ap-northeast-1';
             const accountId = await this.getAccountId();
             this.logger.info(`AWS_ACCOUNT_ID: ${green(accountId)}`);
             this.logger.info(`REGION: ${green(region)}`);
             return {
-                account_id: accountId
+                account_id: accountId,
+                region
             };    
         }
     }
