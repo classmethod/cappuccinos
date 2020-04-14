@@ -1,3 +1,4 @@
 ---
 aws_profile: api-dev
 account_id: "9999999999999999"
+region: ap-northeast-1
