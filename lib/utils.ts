@@ -108,3 +108,15 @@ export const removeExamples = (obj: any) => {
 export const notUndefined = <T>(value: T | undefined): value is T => {
     return value !== undefined;
 }
+
+export const awsConfigTransformer = (awsConfig: AwsConfig) => {
+    const replace = (doc: string): string => {
+        let tmp = doc.replace(/\$\{AWS::AccountId\}/g, awsConfig.account_id);
+        tmp = tmp.replace(/\$\{AWS::Region\}/g, awsConfig.region);
+        if (doc === tmp) return tmp;
+        return replace(tmp);
+    }
+    return (doc: string) => {
+        return replace(doc);
+    };
+}

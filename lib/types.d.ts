@@ -10,6 +10,7 @@ export interface ProjectConfig {
     layers: LayersConfig[];
     shared: SharedConfig[];
     apis: string[];
+    state_machines: string[];
 }
 
 export interface FunctionsConfig {
@@ -49,4 +50,8 @@ export interface IFile {
     base_dir: string;
     source: string;
     destination: string;
+}
+
+export interface StateMachineConfig {
+    role: string;
 }

@@ -2,7 +2,7 @@
 process.env.AWS_SDK_LOAD_CONFIG = 1;
 const fs = require('fs');
 const prog = require('caporal');
-const { newLayers, newFunctions, newApis } = require('../lib/Cappuccinos');
+const { newLayers, newFunctions, newApis, newStateMachines } = require('../lib/Cappuccinos');
 const utils = require('../lib/utils');
 
 const envArgValidator = (arg) => {
@@ -37,6 +37,13 @@ const apiArgValidator = (arg) => {
     fs.statSync(`./apis/${arg}/swagger.yaml`);
   } catch (err) {
     throw new Error(`Can not find api path ./apis/${arg}/swagger.yaml`);
+  }
+  return arg;
+};
+
+const stateMachineArgValidator = (arg) => {
+  if (!fs.existsSync(`./state_machines/${arg}/state_machine.yaml`)) {
+    throw new Error(`Can not find api path ./${arg}/state_machine.yaml`);
   }
   return arg;
 };
@@ -200,6 +207,19 @@ prog
     const apis = await newApis(args.env, options, logger);
     await apis.cleanup();
     await apis.deployApiStages(options.stageName);
+  })
+  .command('state_machine deploy', 'Deploy Step Functions')
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .argument('[name]', 'target state machine to deploy', stateMachineArgValidator)
+  .option('--ignore-profile', 'ignore aws profile')
+  .action(async (args, options, logger) => {
+    logger.info(`[Deploy Step Function]`);
+    const stateMachine = await newStateMachines(args.env, options, logger);
+    if (args.name) {
+      await stateMachine.deploy(args.name);
+    } else {
+      await stateMachine.deployAll();
+    }
   })
 ;
 prog.parse(process.argv);
