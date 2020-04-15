@@ -52,6 +52,25 @@ const changeLogLevel = (logger, level) => {
   Object.keys(logger.transports).forEach(t => logger.transports[t].level = level)
 };
 
+const getExtraVars = (options) => {
+  const val = (v) => {
+    if (v.match(/^[0-9]+$/)) return Number(v);
+    if (v.match(/^(true|false)$/)) return (v === 'true') ? true : false;
+    return v;
+  };
+  const result = {};
+  if (Array.isArray(options.vars)) {
+    options.vars.forEach(v => {
+      const tokens = v.split('=');
+      result[tokens[0]] = val(tokens[1]);
+    });
+  } else if (options.vars) {
+    const tokens = options.vars.split('=');
+    result[tokens[0]] = val(tokens[1]);
+  }
+  return result;
+}
+
 prog
   .version('0.0.1')
   .description('deploy and publish AWS Lambda functions and API Gateway.')
@@ -134,24 +153,7 @@ prog
   .action(async (args, options, logger) => {
     if (options.json) changeLogLevel(logger, 'warn');
     logger.info(`[Invoke Function]`);
-    const extraVars = (() => {
-      const val = (v) => {
-        if (v.match(/^[0-9]+$/)) return Number(v);
-        if (v.match(/^(true|false)$/)) return (v === 'true') ? true : false;
-        return v;
-      };
-      const result = {};
-      if (Array.isArray(options.vars)) {
-        options.vars.forEach(v => {
-          const tokens = v.split('=');
-          result[tokens[0]] = val(tokens[1]);
-        });
-      } else if (options.vars) {
-        const tokens = options.vars.split('=');
-        result[tokens[0]] = val(tokens[1]);
-      }
-      return result;
-    })();
+    const extraVars = getExtraVars(options);
     const functions = await newFunctions(args.env, options, logger);
     const result = await functions.invokeFunction(utils.toFunctionPath(args.function), extraVars, options.event);
     if (options.json) {
@@ -229,26 +231,9 @@ prog
   .action(async (args, options, logger) => {
     if (options.json) changeLogLevel(logger, 'warn');
     logger.info(`[Invoke Step Function]`);
-    const extraVars = (() => {
-      const val = (v) => {
-        if (v.match(/^[0-9]+$/)) return Number(v);
-        if (v.match(/^(true|false)$/)) return (v === 'true') ? true : false;
-        return v;
-      };
-      const result = {};
-      if (Array.isArray(options.vars)) {
-        options.vars.forEach(v => {
-          const tokens = v.split('=');
-          result[tokens[0]] = val(tokens[1]);
-        });
-      } else if (options.vars) {
-        const tokens = options.vars.split('=');
-        result[tokens[0]] = val(tokens[1]);
-      }
-      return result;
-    })();
+    const extraVars = getExtraVars(options);
     const stateMachine = await newStateMachines(args.env, options, logger);
-    await stateMachine.startExecution(args.name);
+    await stateMachine.startExecution(args.name, extraVars, options.event);
   })  
 ;
 prog.parse(process.argv);
