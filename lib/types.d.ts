@@ -30,6 +30,15 @@ export interface LambdaConfig {
     memory: number;
     environment: { [key: string]: string; };
     layers: string[];
+    permissions?: LambdaPermission[];
+}
+
+export interface LambdaPermission {
+    statement_id: string;
+    action: string;
+    principal: string;
+    source_arn?: string;
+    source_account?: string;
 }
 
 export interface SharedConfig {

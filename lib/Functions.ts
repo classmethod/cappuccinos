@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import * as AWS from 'aws-sdk';
 import { Process } from './Process';
-import { ProjectConfig, LambdaConfig, AwsConfig } from './types';
+import { ProjectConfig, LambdaConfig, AwsConfig, LambdaPermission } from './types';
 import { Archiver } from './Archiver';
 import * as utils from './utils';
 import { blue } from 'colorette';
@@ -176,7 +176,7 @@ export class Functions {
         };
         await meregeExtConfig(`./functions/${func}/function.yaml`);
         await meregeExtConfig(`./functions/${func}/function.${this.env}.yaml`);
-        config.layers = config.layers.map(layerName => this.layerArns[layerName]);
+        config.layers = config.layers.map(layerName => this.layerArns[layerName] || layerName);
         return config;
     }
 
@@ -292,6 +292,7 @@ export class Functions {
         } else {
             this.logger.info(`  # Alias unchanged      ${blue('function=')}${functionName}, ${blue('version=')}${version}, ${blue('alias=')}${alias}`);
         }
+        await this.addPermissions(functionName, alias);
     } 
     
     async publishVersion(functionName: string) {
@@ -343,4 +344,92 @@ export class Functions {
         this.logger.info(`  # Alias changed       ${blue('function=')}${functionName}, ${blue('version=')}${version}, ${blue('alias=')}${alias}`);
         return resp.FunctionVersion;
     }
+
+    private async addPermissions(functionName: string, alias: string) {
+        const func = utils.toFunctionPath(functionName);
+        const config = await this.getConfiguration(func);
+        if (!config.permissions || config.permissions.length === 0) return;
+        const policies = await this.getPolicies(functionName, alias);
+        for (let i = 0, len = config.permissions.length; i < len; i++) {
+            const permission = config.permissions[i];
+            const policy = policies[permission.statement_id];
+            if (policy === undefined) {
+                await this.addPermission(functionName, alias, permission);
+            } else {
+                await this.updatePermission(functionName, alias, permission, policy);
+                delete policies[permission.statement_id];
+            }
+        }
+        Object.keys(policies).map(sid => this.removePermission(functionName, alias, sid))
+    }
+
+    private async getPolicies(functionName: string, alias: string) {
+        const params = {
+            FunctionName: functionName,
+            Qualifier: alias
+        };
+        try {
+            const policies: any = {};
+            const result = await this.lambda.getPolicy(params).promise();
+            this.logger.debug(JSON.stringify(result, null, 2));
+            if (!result.Policy) return policies;
+            const policy = JSON.parse(result.Policy);
+            this.logger.debug(JSON.stringify(policy, null, 2));
+            const statement = policy.Statement as any[];
+            statement.map(st => {
+                policies[st.Sid] = st;
+            });
+            return policies;
+        } catch (err) {
+            if (err.code == 'ResourceNotFoundException') return {};
+            throw err;
+        }
+    }
+
+    private async addPermission(functionName: string, alias: string, permission: LambdaPermission) {
+        const params = {
+            FunctionName: functionName,
+            Qualifier: alias,
+            Action: permission.action,
+            Principal: permission.principal,
+            StatementId: permission.statement_id,
+            SourceAccount: permission.source_account,
+            SourceArn: permission.source_arn
+        };
+        try {
+            const result = await this.lambda.addPermission(params).promise();
+            this.logger.debug(JSON.stringify(result, null, 2));
+        } catch (err) {
+            if (err.code === 'ResourceNotFoundException') {
+                throw new Error(err.message);
+            }
+            throw err;
+        }
+    }
+
+    private async updatePermission(functionName: string, alias: string, permission: LambdaPermission, policy: any) {
+        if (this.isNeedUpdate(permission, policy) === false) return;
+        await this.removePermission(functionName, alias, permission.statement_id);
+        await this.addPermission(functionName, alias, permission);
+    }
+
+    private isNeedUpdate(permission: LambdaPermission, policy: any): boolean {
+        if (policy.Principal.Service !== permission.principal) return true;
+        if (policy.Action !== permission.action) return true;
+        if (policy.Condition.StringEquals && policy.Condition.StringEquals['AWS:SourceAccount'] !== permission.source_account) return true;
+        if (policy.Condition.ArnLike && policy.Condition.ArnLike['AWS:SourceArn'] !== permission.source_arn) return true;
+        return false;
+    }
+
+    private async removePermission(functionName: string, alias: string, statementId: string) {
+        const params = {
+            FunctionName: functionName,
+            Qualifier: alias,
+            StatementId: statementId
+        };
+        const result = await this.lambda.removePermission(params).promise();
+        this.logger.debug(JSON.stringify(result, null, 2));
+    }
+
+
 }
