@@ -247,15 +247,8 @@ export class Functions {
 
     async invokeFunction(func: string, extraVars: { [key: string]: any } = {}, eventName = 'test') {
         const functionName = utils.toFunctionName(func);
-        const payload = JSON.parse(readFileSync(`./functions/${func}/event.${eventName}.json`, 'utf8'))
-        Object.keys(extraVars).forEach(key => {
-            if (key.indexOf('.') == -1) {
-                payload[key] = extraVars[key];
-            } else {
-                const keys = key.split('.');
-                payload[keys[0]][keys[1]] = extraVars[key];
-            }
-        });
+        const payload = JSON.parse(readFileSync(`./functions/${func}/event.${eventName}.json`, 'utf8'));
+        utils.mergeExtraVars(payload, extraVars);
         const alias = this.options.alias || '$LATEST';
         this.logger.info('>>>');
         this.logger.info(payload);

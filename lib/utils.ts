@@ -120,3 +120,15 @@ export const awsConfigTransformer = (awsConfig: AwsConfig) => {
         return replace(doc);
     };
 }
+
+export const mergeExtraVars = (payload: any, extraVars: { [key: string]: any }) => {
+    Object.keys(extraVars).forEach(key => {
+        if (key.indexOf('.') == -1) {
+            payload[key] = extraVars[key];
+        } else {
+            const keys = key.split('.');
+            payload[keys[0]][keys[1]] = extraVars[key];
+        }
+    });
+    return payload;
+}

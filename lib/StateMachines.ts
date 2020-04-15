@@ -96,6 +96,9 @@ export class StateMachines {
 
     async startExecution(stateMachineName: string, extraVars: { [key: string]: any } = {}, eventName = 'test') {
         const payload = JSON.parse(readFileSync(`./state_machines/${stateMachineName}/event.${eventName}.json`, 'utf8'))
+        utils.mergeExtraVars(payload, extraVars);
+        this.logger.info('>>>');
+        this.logger.info(payload);
         const params = {
             stateMachineArn: `arn:aws:states:${this.awsConfig.region}:${this.awsConfig.account_id}:stateMachine:${stateMachineName}`,
             input: JSON.stringify(payload, null, 2)
