@@ -208,7 +208,7 @@ prog
     await apis.cleanup();
     await apis.deployApiStages(options.stageName);
   })
-  .command('state_machine deploy', 'Deploy Step Functions')
+  .command('stepfunctions deploy', 'Deploy Step Functions')
   .argument('<env>', 'Enviroment', envArgValidator)
   .argument('[name]', 'target state machine to deploy', stateMachineArgValidator)
   .option('--ignore-profile', 'ignore aws profile')
