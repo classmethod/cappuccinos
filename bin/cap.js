@@ -221,5 +221,34 @@ prog
       await stateMachine.deployAll();
     }
   })
+  .command('stepfunctions invoke', 'Invoke a specific step function.')
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .argument('<name>', 'target step function to invoke', stateMachineArgValidator)
+  .option('--event <event>', 'input payload file')
+  .option('--vars <params>', 'override payload variables')
+  .action(async (args, options, logger) => {
+    if (options.json) changeLogLevel(logger, 'warn');
+    logger.info(`[Invoke Step Function]`);
+    const extraVars = (() => {
+      const val = (v) => {
+        if (v.match(/^[0-9]+$/)) return Number(v);
+        if (v.match(/^(true|false)$/)) return (v === 'true') ? true : false;
+        return v;
+      };
+      const result = {};
+      if (Array.isArray(options.vars)) {
+        options.vars.forEach(v => {
+          const tokens = v.split('=');
+          result[tokens[0]] = val(tokens[1]);
+        });
+      } else if (options.vars) {
+        const tokens = options.vars.split('=');
+        result[tokens[0]] = val(tokens[1]);
+      }
+      return result;
+    })();
+    const stateMachine = await newStateMachines(args.env, options, logger);
+    await stateMachine.startExecution(args.name);
+  })  
 ;
 prog.parse(process.argv);

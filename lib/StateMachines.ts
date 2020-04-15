@@ -76,7 +76,7 @@ export class StateMachines {
         const params = {
             stateMachineArn: stateMachine.stateMachineArn,
             roleArn: config.role,
-            definition: JSON.stringify(definition,  null, 2)
+            definition: JSON.stringify(definition, null, 2)
         };
         const result = await this.stepFunctions.updateStateMachine(params).promise();
         this.logger.debug(JSON.stringify(result, null, 2));
@@ -93,4 +93,15 @@ export class StateMachines {
         if (definition === undefined) throw new Error(`Cannot find ./state_machines/${stateMachineName}/definition.yaml`);
         return definition;
     }
+
+    async startExecution(stateMachineName: string, extraVars: { [key: string]: any } = {}, eventName = 'test') {
+        const payload = JSON.parse(readFileSync(`./state_machines/${stateMachineName}/event.${eventName}.json`, 'utf8'))
+        const params = {
+            stateMachineArn: `arn:aws:states:${this.awsConfig.region}:${this.awsConfig.account_id}:stateMachine:${stateMachineName}`,
+            input: JSON.stringify(payload, null, 2)
+        };
+        const result = await this.stepFunctions.startExecution(params).promise();
+        this.logger.debug(JSON.stringify(result, null, 2));
+    }
+
 }
