@@ -417,8 +417,8 @@ export class Functions {
     private isNeedUpdate(permission: LambdaPermission, policy: any): boolean {
         if (policy.Principal.Service !== permission.principal) return true;
         if (policy.Action !== permission.action) return true;
-        if (policy.Condition.StringEquals && policy.Condition.StringEquals['AWS:SourceAccount'] !== permission.source_account) return true;
-        if (policy.Condition.ArnLike && policy.Condition.ArnLike['AWS:SourceArn'] !== permission.source_arn) return true;
+        if (policy.Condition && policy.Condition.StringEquals && policy.Condition.StringEquals['AWS:SourceAccount'] !== permission.source_account) return true;
+        if (policy.Condition && policy.Condition.ArnLike && policy.Condition.ArnLike['AWS:SourceArn'] !== permission.source_arn) return true;
         return false;
     }
 
