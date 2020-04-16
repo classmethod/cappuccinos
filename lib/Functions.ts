@@ -132,6 +132,7 @@ export class Functions {
             await this.updateFunctionConfiguration(functionName, config);
             this.logger.info(`  # Function updated     ${blue('function=')}${functionName}`);
         }
+        await this.addPermissions(functionName);
     }
 
     async prepareDeploy() {
@@ -345,7 +346,7 @@ export class Functions {
         return resp.FunctionVersion;
     }
 
-    private async addPermissions(functionName: string, alias: string) {
+    private async addPermissions(functionName: string, alias?: string) {
         const func = utils.toFunctionPath(functionName);
         const config = await this.getConfiguration(func);
         if (!config.permissions || config.permissions.length === 0) return;
@@ -354,20 +355,20 @@ export class Functions {
             const permission = config.permissions[i];
             const policy = policies[permission.statement_id];
             if (policy === undefined) {
-                await this.addPermission(functionName, alias, permission);
+                await this.addPermission(functionName, permission, alias);
             } else {
-                await this.updatePermission(functionName, alias, permission, policy);
+                await this.updatePermission(functionName, permission, policy, alias);
                 delete policies[permission.statement_id];
             }
         }
-        Object.keys(policies).map(sid => this.removePermission(functionName, alias, sid))
+        Object.keys(policies).map(sid => this.removePermission(functionName, sid, alias))
     }
 
-    private async getPolicies(functionName: string, alias: string) {
-        const params = {
-            FunctionName: functionName,
-            Qualifier: alias
+    private async getPolicies(functionName: string, alias?: string) {
+        const params: AWS.Lambda.Types.GetPolicyRequest = {
+            FunctionName: functionName
         };
+        if (alias) params.Qualifier = alias;
         try {
             const policies: any = {};
             const result = await this.lambda.getPolicy(params).promise();
@@ -386,16 +387,16 @@ export class Functions {
         }
     }
 
-    private async addPermission(functionName: string, alias: string, permission: LambdaPermission) {
-        const params = {
+    private async addPermission(functionName: string, permission: LambdaPermission, alias?: string) {
+        const params: AWS.Lambda.Types.AddPermissionRequest = {
             FunctionName: functionName,
-            Qualifier: alias,
             Action: permission.action,
             Principal: permission.principal,
             StatementId: permission.statement_id,
             SourceAccount: permission.source_account,
             SourceArn: permission.source_arn
         };
+        if (alias) params.Qualifier = alias;
         try {
             const result = await this.lambda.addPermission(params).promise();
             this.logger.debug(JSON.stringify(result, null, 2));
@@ -407,10 +408,10 @@ export class Functions {
         }
     }
 
-    private async updatePermission(functionName: string, alias: string, permission: LambdaPermission, policy: any) {
+    private async updatePermission(functionName: string, permission: LambdaPermission, policy: any, alias?: string) {
         if (this.isNeedUpdate(permission, policy) === false) return;
-        await this.removePermission(functionName, alias, permission.statement_id);
-        await this.addPermission(functionName, alias, permission);
+        await this.removePermission(functionName, permission.statement_id, alias);
+        await this.addPermission(functionName, permission, alias);
     }
 
     private isNeedUpdate(permission: LambdaPermission, policy: any): boolean {
@@ -421,12 +422,12 @@ export class Functions {
         return false;
     }
 
-    private async removePermission(functionName: string, alias: string, statementId: string) {
-        const params = {
+    private async removePermission(functionName: string, statementId: string, alias?: string) {
+        const params: AWS.Lambda.Types.RemovePermissionRequest = {
             FunctionName: functionName,
-            Qualifier: alias,
             StatementId: statementId
         };
+        if (alias) params.Qualifier = alias;
         const result = await this.lambda.removePermission(params).promise();
         this.logger.debug(JSON.stringify(result, null, 2));
     }
