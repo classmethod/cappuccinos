@@ -29,9 +29,10 @@ export class StateMachines {
     }
 
     async deployAll() {
+        if (!this.projectConfig.state_machines) return;
         await Promise.all(
             this.projectConfig.state_machines.map(stateMachineName => this.deploy(stateMachineName))
-        )
+        );
     }
 
     async deploy(stateMachineName: string) {
