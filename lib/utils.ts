@@ -1,6 +1,6 @@
 import { promises as fs, readFileSync, readdirSync, existsSync } from 'fs';
 import * as YAML from 'yaml';
-import { ProjectConfig, AwsConfig } from './types';
+import { ProjectConfig, AwsConfig, LambdaConfig } from './types';
 import { Blob } from 'aws-sdk/lib/dynamodb/document_client';
 
 export const sleep = async (msec: number) => {
@@ -131,4 +131,9 @@ export const mergeExtraVars = (payload: any, extraVars: { [key: string]: any }) 
         }
     });
     return payload;
+}
+
+export const copyConfig = <T>(source: T): T => {
+    const yamlStr = YAML.stringify(source);
+    return YAML.parse(yamlStr) as T;
 }

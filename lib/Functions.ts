@@ -155,7 +155,7 @@ export class Functions {
     }       
 
     async getConfiguration(func: string): Promise<LambdaConfig> {
-        const config = this.projectConfig.functions.configuration;
+        const config = utils.copyConfig(this.projectConfig.functions.configuration);
         const meregeExtConfig = async (path: string) => {
             const extConfig = utils.loadYaml(path);
             if (!extConfig) return;
