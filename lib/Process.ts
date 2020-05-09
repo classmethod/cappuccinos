@@ -9,11 +9,17 @@ export class Process {
     }
 
     execCommand(commands: string[], opts: any) {
-        commands.map(cmd => {
+        for (let i = 0, len = commands.length; i < len; i++) {
+            const cmd = commands[i];
             this.logger.debug(cmd);
-            const out = execSync(cmd, opts);
-            this.logger.debug(out.toString());
-        });
+            try {
+                const out = execSync(cmd, opts);
+                this.logger.debug(out.toString());
+            } catch (err) {
+                this.logger.error(err.stdout.toString());
+                throw new Error(`execCommand error: ${cmd}, ${opts.cwd}`);;
+            }
+        }
     }
 
 }
