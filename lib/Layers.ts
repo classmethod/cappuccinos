@@ -43,8 +43,9 @@ export class Layers {
         );
     }
 
-    async build(layerName: string): Promise<string> {
+    async build(layerName: string): Promise<string|undefined> {
         const conf = this.getConf(layerName);
+        if (conf.build === undefined) return undefined;
         this.logger.debug(`> build: ${layerName}`);
         const path = `./layers/${layerName}`;
         const opts = { cwd: path };
@@ -66,6 +67,7 @@ export class Layers {
 
     async deploy(layerName: string) {
         const file = await this.build(layerName);
+        if (file === undefined) throw new Error(`Cannot deploy Layer: ${layerName}`);
         const latestVersion = await this.publish(layerName, this.getConf(layerName).runtimes, file);
         this.logger.info(`  # Layer published      ${blue('layer=')}${layerName},  ${blue('version=')}${latestVersion}`);
     }
