@@ -2,7 +2,7 @@
 process.env.AWS_SDK_LOAD_CONFIG = 1;
 const fs = require('fs');
 const prog = require('caporal');
-const { newLayers, newFunctions, newApis, newStateMachines } = require('../lib/Cappuccinos');
+const { newLayers, newFunctions, newApis, newWebSocketApis, newStateMachines } = require('../lib/Cappuccinos');
 const utils = require('../lib/utils');
 
 const envArgValidator = (arg) => {
@@ -209,6 +209,15 @@ prog
     const apis = await newApis(args.env, options, logger);
     await apis.cleanup();
     await apis.deployApiStages(options.stageName);
+  })
+  .command('websockets deploy', 'Deploy WebSocket APIs')
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .option('--ignore-profile', 'ignore aws profile')
+  .action(async (args, options, logger) => {
+    logger.info(`[Deploy WebSocket API]`);
+    const websockets = await newWebSocketApis(args.env, options, logger);
+    await websockets.cleanup();
+    await websockets.deploy();
   })
   .command('stepfunctions deploy', 'Deploy Step Functions')
   .argument('<env>', 'Enviroment', envArgValidator)

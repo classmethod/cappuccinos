@@ -10,6 +10,7 @@ export interface ProjectConfig {
     layers: LayersConfig[];
     shared: SharedConfig[];
     apis: string[];
+    websockets?: string[];
     state_machines: string[];
 }
 
