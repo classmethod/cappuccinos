@@ -6,33 +6,12 @@ import { sync as glob } from 'glob';
 import { ProjectConfig, AwsConfig } from './types';
 import * as utils from './utils';
 import { blue, green } from 'colorette';
+import { CappuccinosBase } from './CappuccinosBase'
 
-export class Apis {
-
-    env: string;
-    options: any;
-    logger: any;
-    buidDir: string;
-    projectConfig: ProjectConfig;
-    awsConfig: AwsConfig;
-    dryRun: boolean;
-    s3: AWS.S3;
-    cfn: AWS.CloudFormation;
-    lambda: AWS.Lambda;
-    apigateway: AWS.APIGateway;
+export class Apis extends CappuccinosBase {
 
     constructor(env: string, options: any, logger: any, config: ProjectConfig, awsConfig: AwsConfig) {
-        this.logger = logger;
-        this.env = env;
-        this.options = options;
-        this.buidDir = './build/apis';
-        this.projectConfig = config;
-        this.awsConfig = awsConfig;
-        this.dryRun = this.options.dryRun;
-        this.cfn = new AWS.CloudFormation();
-        this.s3 = new AWS.S3();
-        this.lambda = new AWS.Lambda();
-        this.apigateway = new AWS.APIGateway();
+        super(env, options, logger, config, awsConfig, './build/apis');
     }
 
     async cleanup() {
@@ -84,15 +63,19 @@ export class Apis {
         this.logger.debug(stackName);
         const stack = await this.describeStack(stackName);
         if (stack === undefined) {
-            await this.createStack(stackName);
+            await this.createStack(stackName, this.makeApiTemplateBody());
             this.logger.info(`  # API create start          ${blue('stackName=')}${stackName}`);
             await this.waitForCreate(stackName);
             this.logger.info(`  # API created               ${blue('stackName=')}${stackName}`);
         } else {
-            await this.updateStack(stackName);
-            this.logger.info(`  # API update start          ${blue('stackName=')}${stackName}`);
-            await this.waitForUpdate(stackName);
-            this.logger.info(`  # API updated               ${blue('stackName=')}${stackName}`);
+            const stackId = await this.updateStack(stackName, this.makeApiTemplateBody());
+            if (stackId) {
+                this.logger.info(`  # API update start          ${blue('stackName=')}${stackName}`);
+                await this.waitForUpdate(stackName);
+                this.logger.info(`  # API updated               ${blue('stackName=')}${stackName}`);
+            } else {
+                this.logger.info(`  # API No updates            ${blue('stackName=')}${stackName}`);
+            }
         }
     }
 
@@ -123,42 +106,6 @@ export class Apis {
         this.logger.info(`  # Uploaded   ${green(`s3://${params.Bucket}/${params.Key}`)}`);
     }
 
-    async describeStack(stackName: string) {
-        try {
-            const params = {
-                StackName: stackName
-            };
-            const ret = await this.cfn.describeStacks(params).promise();
-            this.logger.debug(JSON.stringify(ret, null, 2));
-            return ret.Stacks ? ret.Stacks[0] : undefined;
-        } catch (err) {
-            if (err.code == 'ValidationError') return undefined;
-            throw err;
-        }
-    }
-
-    async createStack(stackName: string) {
-        const params = {
-            StackName: stackName,
-            TemplateBody: this.makeApiTemplateBody(),
-            Capabilities: ['CAPABILITY_AUTO_EXPAND']
-        };
-        const result = await this.cfn.createStack(params).promise();
-        this.logger.debug(JSON.stringify(result, null, 2));
-        return result.StackId;
-    }
-
-    async updateStack(stackName: string) {
-        const params = {
-            StackName: stackName,
-            TemplateBody: this.makeApiTemplateBody(),
-            Capabilities: ['CAPABILITY_AUTO_EXPAND']
-        };
-        const result = await this.cfn.updateStack(params).promise();
-        this.logger.debug(JSON.stringify(result, null, 2));
-        return result.StackId;
-    }
-
     makeApiTemplateBody(): string {
         const resouces: any = {};
         this.projectConfig.apis.map(apiName => {
@@ -183,22 +130,6 @@ export class Apis {
         };
         this.logger.debug(YAML.stringify(body));
         return YAML.stringify(body);
-    }
-
-    async waitForCreate(stackName: string) {
-        const params = {
-            StackName: stackName
-        };
-        const ret = await this.cfn.waitFor('stackCreateComplete', params).promise();
-        this.logger.debug(JSON.stringify(ret, null, 2));
-    }
-
-    async waitForUpdate(stackName: string) {
-        const params = {
-            StackName: stackName
-        };
-        const ret = await this.cfn.waitFor('stackUpdateComplete', params).promise();
-        this.logger.debug(JSON.stringify(ret, null, 2));
     }
 
     async deployApiStages(stageName: string) {
