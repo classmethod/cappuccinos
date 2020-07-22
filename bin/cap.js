@@ -219,6 +219,16 @@ prog
     await websockets.cleanup();
     await websockets.deploy();
   })
+  .command('websockets stage', "Deploy WebSocket　API's stage.")
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .option('--stage-name <value>', 'Stage name for deployment.', ['current', 'stable'], 'current')
+  .option('--ignore-profile', 'ignore aws profile')
+  .action(async (args, options, logger) => {
+    logger.info(`[Deploy WebSocket　API Stage]`);
+    const websockets = await newWebSocketApis(args.env, options, logger);
+    await websockets.cleanup();
+    await websockets.deployApiStages(options.stageName);
+  })
   .command('stepfunctions deploy', 'Deploy Step Functions')
   .argument('<env>', 'Enviroment', envArgValidator)
   .argument('[name]', 'target state machine to deploy', stateMachineArgValidator)
