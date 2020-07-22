@@ -65,7 +65,7 @@ export class WebSocketApis extends CappuccinosBase {
     }
     const deploymentId = await this.createDeployment(apiId, stageName);
     this.logger.debug(deploymentId);
-
+    await this.addPermissionToLambdaFunctions(apiId, stageName);
     this.logger.info(`  # Stage deployed    ${blue('api=')}${apiName}, ${blue('stage=')}${stageName}`);
   }
   
@@ -115,4 +115,27 @@ export class WebSocketApis extends CappuccinosBase {
     return id;
   }
 
+  private async addPermissionToLambdaFunctions(apiId: string, stageName: string) {
+    const functions = await this.getIntegrationFunctions(apiId);
+    await Promise.all(
+      functions.map(functionName => this.addPermissionToLambdaFunction(apiId, stageName, functionName))
+    );
+  }
+
+  private async getIntegrationFunctions(apiId: string): Promise<string[]> {
+    const params = {
+      ApiId: apiId,
+    };
+    const result = await this.apigatewayv2.getIntegrations(params).promise();
+    const functions = result.Items?.filter(item => item.IntegrationType === 'AWS_PROXY')
+                  .map(item => {
+                    if (item.IntegrationUri === undefined) return undefined;
+                    const m = item.IntegrationUri.match(/\:function\:([a-z0-9_]+)[\:\/]/);
+                    return m ? m[1] : undefined;
+                  })
+                  .filter(utils.notUndefined)
+                  .filter((x, i, self) => self.indexOf(x) === i); // unique;
+    this.logger.debug(JSON.stringify(functions, null, 2));
+    return functions || []
+  }
 }
