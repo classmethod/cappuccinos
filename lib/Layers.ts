@@ -39,13 +39,12 @@ export class Layers {
 
     async buildAll() {
         await Promise.all(
-            this.projectConfig.layers.map(layer => this.build(layer.name))
+            this.projectConfig.layers.filter(layer => layer.build !== undefined).map(layer => this.build(layer.name))
         );
     }
 
     async build(layerName: string): Promise<string|undefined> {
         const conf = this.getConf(layerName);
-        if (conf.build === undefined) return undefined;
         this.logger.debug(`> build: ${layerName}`);
         const path = `./layers/${layerName}`;
         const opts = { cwd: path };
@@ -61,7 +60,7 @@ export class Layers {
 
     async deployAll() {
         await Promise.all(
-            this.projectConfig.layers.map(layer => this.deploy(layer.name))
+            this.projectConfig.layers.filter(layer => layer.build !== undefined).map(layer => this.deploy(layer.name))
         );
     }
 
