@@ -190,7 +190,19 @@ prog
       await logs.updateAll();
     }
   })
-  // .command('logs subscription', 'subscribe log handler.')
+  .command('logs subscription', 'subscribe log handler.')
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .argument('[function]', 'target function to deploy', functionArgValidator)
+  .option('--ignore-profile', 'ignore aws profile')
+  .action(async (args, options, logger) => {
+    logger.info(`[Update CloudWatch Log Groups]`);
+    const logs = await newLogs(args.env, options, logger);
+    if (args.function) {
+      await logs.subscribe(utils.toFunctionPath(args.function));
+    } else {
+      await logs.subscribeAll();
+    }
+  })
   .command('api doc', 'Make APIs document')
   .argument('<env>', 'Enviroment', envArgValidator)
   .argument('[api]', 'target api to make document', apiArgValidator)

@@ -33,6 +33,7 @@ export interface LambdaConfig {
     layers: string[];
     permissions?: LambdaPermission[];
     log_retention_in_days?: 1|3|5|7|14|30|60|90|120|150|180|365|400|545|731|1827|3653;
+    subscription_filter?: SubscriptionFilter;
 }
 
 export interface LambdaPermission {
@@ -41,6 +42,12 @@ export interface LambdaPermission {
     principal: string;
     source_arn?: string;
     source_account?: string;
+}
+
+export interface SubscriptionFilter {
+    name: string;
+    pattern: string;
+    destination_arn: string;
 }
 
 export interface SharedConfig {

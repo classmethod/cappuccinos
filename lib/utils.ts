@@ -25,8 +25,11 @@ export const loadYaml = (path: string, transformer?: Function): any|undefined =>
 }
 
 export const loadProjectConfig = async (env: string, awsConfig: AwsConfig): Promise<ProjectConfig> => {
-    const transformer = (doc: string) => {
-        return doc.replace(/\$\{AWS::AccountId\}/g, awsConfig.account_id);
+    const transformer = (doc: string): string => {
+        let tmp = doc.replace(/\$\{AWS::AccountId\}/g, awsConfig.account_id);
+        tmp = tmp.replace(/\$\{AWS::Region\}/g, awsConfig.region);
+        if (doc === tmp) return tmp;
+        return transformer(tmp);
     };
     const config = loadYaml(`./conf/project.yaml`, transformer);
     const envConf = loadYaml(`./conf/${env}/project.yaml`, transformer);
