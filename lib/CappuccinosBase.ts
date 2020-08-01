@@ -13,6 +13,7 @@ export class CappuccinosBase {
   protected cfn: AWS.CloudFormation;
   protected lambda: AWS.Lambda;
   protected apigateway: AWS.APIGateway;
+  protected logs: AWS.CloudWatchLogs;
   protected buidDir: string;
 
 
@@ -28,6 +29,7 @@ export class CappuccinosBase {
     this.s3 = new AWS.S3();
     this.lambda = new AWS.Lambda();
     this.apigateway = new AWS.APIGateway();
+    this.logs = new AWS.CloudWatchLogs();
   }
 
   async describeStack(stackName: string) {
@@ -87,12 +89,6 @@ export class CappuccinosBase {
     this.logger.debug(JSON.stringify(ret, null, 2));
   }
 
-  async addPermissionToLambdaFunction(apiId: string, stageName: string, functionName: string) {
-    const hasPermission = await this.hasPermission(apiId, functionName, stageName);
-    if (hasPermission) return;
-    await this.addPermission(apiId, functionName, stageName);
-  }
-
   async hasPermission(apiId: string, functionName: string, stageName: string) {
     const params = {
       FunctionName: functionName,
@@ -111,7 +107,9 @@ export class CappuccinosBase {
     }
   }
 
-  async addPermission(apiId: string, functionName: string, stageName: string) {
+  async addPermissionToLambdaFunction(apiId: string, stageName: string, functionName: string) {
+    const hasPermission = await this.hasPermission(apiId, functionName, stageName);
+    if (hasPermission) return;
     const params = {
       FunctionName: functionName,
       Qualifier: stageName,

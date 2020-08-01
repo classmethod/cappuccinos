@@ -2,7 +2,7 @@
 process.env.AWS_SDK_LOAD_CONFIG = 1;
 const fs = require('fs');
 const prog = require('caporal');
-const { newLayers, newFunctions, newApis, newWebSocketApis, newStateMachines } = require('../lib/Cappuccinos');
+const { newLayers, newFunctions, newApis, newWebSocketApis, newStateMachines, newLogs } = require('../lib/Cappuccinos');
 const utils = require('../lib/utils');
 
 const envArgValidator = (arg) => {
@@ -177,6 +177,20 @@ prog
       await functions.publishAll(alias);
     }
   })
+  .command('logs functions', 'create or update CloudWatch Log Group for Lambda functions.')
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .argument('[function]', 'target function to deploy', functionArgValidator)
+  .option('--ignore-profile', 'ignore aws profile')
+  .action(async (args, options, logger) => {
+    logger.info(`[Update CloudWatch Log Groups]`);
+    const logs = await newLogs(args.env, options, logger);
+    if (args.function) {
+      await logs.update(utils.toFunctionPath(args.function));
+    } else {
+      await logs.updateAll();
+    }
+  })
+  // .command('logs subscription', 'subscribe log handler.')
   .command('api doc', 'Make APIs document')
   .argument('<env>', 'Enviroment', envArgValidator)
   .argument('[api]', 'target api to make document', apiArgValidator)

@@ -1,6 +1,7 @@
 import * as AWS from 'aws-sdk';
 import { Layers } from './Layers';
 import { Functions } from './Functions';
+import { Logs } from './Logs';
 import { Apis } from './Apis';
 import { WebSocketApis } from './WebSocketApis';
 import { StateMachines } from './StateMachines';
@@ -20,6 +21,13 @@ export const newFunctions = async (env: string, options: any, logger: any): Prom
     const awsConfig = await cap.initAwsSdk();
     const config = await cap.loadProjectConfig(awsConfig);
     return new Functions(env, options, logger, config, awsConfig);
+}
+
+export const newLogs = async (env: string, options: any, logger: any): Promise<Logs> => {
+    const cap = new Cappuccinos(env, options, logger);
+    const awsConfig = await cap.initAwsSdk();
+    const config = await cap.loadProjectConfig(awsConfig);
+    return new Logs(env, options, logger, config, awsConfig);
 }
 
 export const newApis = async (env: string, options: any, logger: any): Promise<Apis> => {

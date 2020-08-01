@@ -32,6 +32,7 @@ export interface LambdaConfig {
     environment: { [key: string]: string; };
     layers: string[];
     permissions?: LambdaPermission[];
+    log_retention_in_days?: 1|3|5|7|14|30|60|90|120|150|180|365|400|545|731|1827|3653;
 }
 
 export interface LambdaPermission {

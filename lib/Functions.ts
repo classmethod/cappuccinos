@@ -5,28 +5,14 @@ import { ProjectConfig, LambdaConfig, AwsConfig, LambdaPermission } from './type
 import { Archiver } from './Archiver';
 import * as utils from './utils';
 import { blue } from 'colorette';
+import { CappuccinosBase } from './CappuccinosBase'
 
-export class Functions {
+export class Functions extends CappuccinosBase {
 
-    env: string;
-    options: any;
-    logger: any;
-    buidDir: string;
-    projectConfig: ProjectConfig;
-    awsConfig: AwsConfig;
-    dryRun: boolean;
-    lambda: AWS.Lambda;
-    layerArns: { [key: string]: string } = {};
+    protected layerArns: { [key: string]: string } = {};
 
     constructor(env: string, options: any, logger: any, config: ProjectConfig, awsConfig: AwsConfig) {
-        this.logger = logger;
-        this.env = env;
-        this.options = options;
-        this.buidDir = './build/functions';
-        this.projectConfig = config;
-        this.awsConfig = awsConfig;
-        this.dryRun = this.options.dryRun;
-        this.lambda = new AWS.Lambda();
+        super(env, options, logger, config, awsConfig, './build/functions');        
     }
 
     async cleanup() {
