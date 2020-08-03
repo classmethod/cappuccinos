@@ -195,7 +195,7 @@ prog
   .argument('[function]', 'target function to deploy', functionArgValidator)
   .option('--ignore-profile', 'ignore aws profile')
   .action(async (args, options, logger) => {
-    logger.info(`[Update CloudWatch Log Groups]`);
+    logger.info(`[Subscribe log handler CloudWatch Log Groups]`);
     const logs = await newLogs(args.env, options, logger);
     if (args.function) {
       await logs.subscribe(utils.toFunctionPath(args.function));

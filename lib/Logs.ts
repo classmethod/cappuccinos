@@ -81,7 +81,7 @@ export class Logs extends CappuccinosBase {
   async subscribeAll() {
     const functions = utils.listFunctions(this.projectConfig.functions.paths);
     await Promise.all(
-        functions.map(func => this.subscribe(func))
+        functions.map(func => this.subscribe(utils.toFunctionPath(func)))
     );
   }
 
