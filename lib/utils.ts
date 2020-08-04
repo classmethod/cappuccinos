@@ -140,3 +140,8 @@ export const copyConfig = <T>(source: T): T => {
     const yamlStr = YAML.stringify(source);
     return YAML.parse(yamlStr) as T;
 }
+
+export const chunkArray = <T>(array: T[], len = 1): T[][] => {
+    const chunk = Array(Math.ceil(array.length / len));
+    return Array.from(chunk, (x, i) => array.slice(i * len, i * len + len))
+}
