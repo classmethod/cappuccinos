@@ -4,13 +4,20 @@
 |:---|:---|
 |layers build \<env> [layer]              |Build layers.                      |
 |layers deploy \<env> [layer]             |Deploy layers.                     |
+|functions list                           |Display all functions.             |
 |functions build \<env> [function]        |Build a specific function.         |
 |functions deploy \<env> [function]       |Deploy a specific function.        |
 |functions invoke \<env> \<function>      |Invoke a specific function.        |
 |functions publish \<env> [function]      |Publish function.                  |
+|logs functions \<env> [function]         |create or update CloudWatch Log Group for Lambda functions.|
+|logs subscription \<env> [function]      |subscribe log handler.             |
 |api doc \<env> [api]                     |Make APIs document                 |
 |api deploy \<env>                        |Deploy APIs                        |
 |api stage \<env>                         |Apply APIs to stage                |
+|websockets deploy \<env>                 |Deploy WebSocket APIs              |
+|websockets stage \<env>                  |Apply WebSocket APIs to stage      |
+|stepfunctions deploy <env> [name]        |Deploy Step Functions              |                           
+|stepfunctions invoke <env> <name>        |Invoke a specific step function.   |
 
 # Requirements
 
