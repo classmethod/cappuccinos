@@ -6,6 +6,7 @@
 |layers deploy \<env> [layer]             |Deploy layers.                     |
 |functions list                           |Display all functions.             |
 |functions build \<env> [function]        |Build a specific function.         |
+|functions delete \<env> [function]       |Delete a specific function.        |
 |functions deploy \<env> [function]       |Deploy a specific function.        |
 |functions invoke \<env> \<function>      |Invoke a specific function.        |
 |functions publish \<env> [function]      |Publish function.                  |
