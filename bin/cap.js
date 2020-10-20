@@ -126,6 +126,22 @@ prog
       await functions.buildAll();
     }
   })
+  .command('functions delete', 'Delete a specific function.')
+  .argument('<env>', 'Enviroment', envArgValidator)
+  .argument('[function]', 'target function to deploy', functionArgValidator)
+  .option('--ignore-profile', 'ignore aws profile')
+  .option('--dry-run', 'dry-run ')
+  .action(async (args, options, logger) => {
+    logger.info(`[Delete Function]`);
+    const functions = await newFunctions(args.env, options, logger);
+    await functions.cleanup();
+    if (args.function) {
+      const funcPath = utils.toFunctionPath(args.function);
+      await functions.delete(funcPath);
+    } else {
+      await functions.deleteAll();
+    }
+  })
   .command('functions deploy', 'Deploy a specific function.')
   .argument('<env>', 'Enviroment', envArgValidator)
   .argument('[function]', 'target function to deploy', functionArgValidator)

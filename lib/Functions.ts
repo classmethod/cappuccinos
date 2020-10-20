@@ -29,6 +29,24 @@ export class Functions extends CappuccinosBase {
         });
     }
 
+    async deleteAll() {
+        const functions = utils.listFunctions(this.projectConfig.functions.paths);
+        await Promise.all(
+            functions.map(functionPath => this.delete(functionPath))
+        );
+    }
+    
+    async delete(functionPath: string) {
+        this.logger.debug(`> delete: ${functionPath}`);
+        const functionName = utils.toFunctionName(functionPath);
+        const params: AWS.Lambda.DeleteFunctionRequest = {
+            FunctionName: functionName,
+        };
+        const resp = await this.lambda.deleteFunction(params).promise().catch(e => {});
+        this.logger.debug('delete:', JSON.stringify(resp, null, 2));
+        this.logger.info(`  # Delete function     ${blue('function=')}${functionName}`);
+    }
+
     async buildAll() {
         await this.prepareBuild();
         const functions = utils.listFunctions(this.projectConfig.functions.paths);
