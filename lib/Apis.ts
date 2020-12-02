@@ -133,9 +133,11 @@ export class Apis extends CappuccinosBase {
   }
 
   async deployApiStages(stageName: string) {
-    await Promise.all(
-      this.projectConfig.apis.map(apiName => this.deployApiStage(apiName, stageName))
-    );
+    for (let i = 0, len = this.projectConfig.apis.length; i < len; i++ ) {
+      const apiName = this.projectConfig.apis[i];
+      await this.deployApiStage(apiName, stageName);
+      await utils.sleep(500);
+    }
   }
 
   async deployApiStage(apiName: string, stageName: string) {
