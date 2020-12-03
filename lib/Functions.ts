@@ -106,11 +106,14 @@ export class Functions extends CappuccinosBase {
     const functions = utils.listFunctions(this.projectConfig.functions.paths);
     await Promise.all([
       this.prepareBuild(),
-      this.prepareDeploy()
+      this.prepareDeploy(),
     ]);
-    await Promise.all(
-      functions.map(func => this.deploy(func))
-    );
+    const functionsArray = utils.chunkArray(functions, 15);
+    for (let i = 0, len = functionsArray.length; i < len; i++) {
+      await Promise.all(
+        functionsArray[i].map(func => this.deploy(func))
+      );
+    }
   }
 
   async deployFunction(func: string) {
