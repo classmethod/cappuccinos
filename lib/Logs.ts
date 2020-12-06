@@ -6,26 +6,46 @@ import { CappuccinosBase } from './CappuccinosBase'
 
 export class Logs extends CappuccinosBase {
 
+  private logGroups: AWS.CloudWatchLogs.LogGroup[] = [];
+
   constructor(env: string, options: any, logger: any, config: ProjectConfig, awsConfig: AwsConfig) {
-    super(env, options, logger, config, awsConfig, './build/logs');        
+    super(env, options, logger, config, awsConfig, './build/logs');
+  }
+
+  async init() {
+    for (let token: (string | undefined) = undefined, count = 0; ; count++) {
+      const params: AWS.CloudWatchLogs.DescribeLogGroupsRequest = {
+        logGroupNamePrefix: '/aws/lambda/',
+        nextToken: token,
+      };
+      const resp = await this.logs.describeLogGroups(params).promise();
+      this.logger.debug(JSON.stringify(resp, null, 2));
+      token = resp.nextToken;
+      resp.logGroups?.forEach(lg => {
+        this.logGroups.push(lg);
+      });  
+      if (token === undefined) break;
+      if (count % 5 === 4) await utils.sleep(1000); // API Rate Limit
+    }
   }
 
   async updateAll() {
     const functions = utils.listFunctions(this.projectConfig.functions.paths);
     await Promise.all(
-        functions.map(func => this.update(func))
+      functions.map(func => this.update(func))
     );
   }
 
   async update(functionPath: string) {
     const functionName = utils.toFunctionName(functionPath);
     const logGroupName = `/aws/lambda/${functionName}`;
-    const exist = await this.existLogGroup(logGroupName);
-    if (!exist) {
+    const logGroup = this.getLogGroup(logGroupName);
+    if (logGroup === undefined) {
       await this.createLogGroup(logGroupName);
       this.logger.info(`  # LogGroup created         ${blue('function=')}${functionName}`);
     }
     const retentionInDays = this.getLogRetentionInDays(functionPath);
+    if (logGroup?.retentionInDays === retentionInDays) return;
     if (retentionInDays && 0 < retentionInDays) {
       await this.putRetentionPolicy(logGroupName, retentionInDays);
       this.logger.info(`  # LogGroup putRetention    ${blue('function=')}${functionName} ${blue('retentionInDays=')}${retentionInDays}`);
@@ -43,19 +63,13 @@ export class Logs extends CappuccinosBase {
     return this.projectConfig.functions.configuration.log_retention_in_days;
   }
 
-  private async existLogGroup(logGroupName: string) {
-    const params = {
-      logGroupNamePrefix: logGroupName,
-    };
-    const resp = await this.logs.describeLogGroups(params).promise();
-    this.logger.debug(JSON.stringify(resp, null, 2));
-    if (!resp.logGroups || resp.logGroups.length === 0) return false;
-    return (resp.logGroups.find(e => e.logGroupName === logGroupName) !== undefined);
+  private getLogGroup(logGroupName: string): (AWS.CloudWatchLogs.LogGroup | undefined) {
+    return this.logGroups.find(e => e.logGroupName === logGroupName);
   }
 
   private async createLogGroup(logGroupName: string) {
     const params = {
-        logGroupName: logGroupName,
+      logGroupName: logGroupName,
     };
     const resp = await this.logs.createLogGroup(params).promise();
     this.logger.debug(JSON.stringify(resp, null, 2));

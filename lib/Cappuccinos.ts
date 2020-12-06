@@ -27,7 +27,9 @@ export const newLogs = async (env: string, options: any, logger: any): Promise<L
     const cap = new Cappuccinos(env, options, logger);
     const awsConfig = await cap.initAwsSdk();
     const config = await cap.loadProjectConfig(awsConfig);
-    return new Logs(env, options, logger, config, awsConfig);
+    const logs = new Logs(env, options, logger, config, awsConfig);
+    await logs.init();
+    return logs;
 }
 
 export const newApis = async (env: string, options: any, logger: any): Promise<Apis> => {
