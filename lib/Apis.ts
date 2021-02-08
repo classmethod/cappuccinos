@@ -30,6 +30,7 @@ export class Apis extends CappuccinosBase {
     const path = `${this.buidDir}/${apiName}.swagger.yaml`;
     writeFileSync(path, YAML.stringify(yaml));
     this.logger.debug(yaml);
+    this.logger.debug(`spectacle -t ${this.buidDir}/${apiName} ${path}`);
     const out = execSync(`spectacle -t ${this.buidDir}/${apiName} ${path}`);
     this.logger.debug(out.toString());
     this.logger.info(`  # API document created        ${blue('api=')}${apiName}`);
