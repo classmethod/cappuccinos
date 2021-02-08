@@ -1,3 +1,4 @@
+import path from 'path';
 import { writeFileSync } from 'fs';
 import { execSync } from 'child_process';
 import * as AWS from 'aws-sdk';
@@ -11,7 +12,7 @@ import { CappuccinosBase } from './CappuccinosBase'
 export class Apis extends CappuccinosBase {
 
   constructor(env: string, options: any, logger: any, config: ProjectConfig, awsConfig: AwsConfig) {
-    super(env, options, logger, config, awsConfig, './build/apis');
+    super(env, options, logger, config, awsConfig, path.resolve('./build/apis'));
   }
 
   async cleanup() {
