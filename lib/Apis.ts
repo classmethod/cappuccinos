@@ -4,7 +4,7 @@ import { execSync } from 'child_process';
 import * as AWS from 'aws-sdk';
 import * as YAML from 'yaml';
 import { sync as glob } from 'glob';
-import { ProjectConfig, AwsConfig } from './types';
+import { ProjectConfig, AwsConfig, ApiConfig } from './types';
 import * as utils from './utils';
 import { blue, green } from 'colorette';
 import { CappuccinosBase } from './CappuccinosBase'
@@ -22,12 +22,13 @@ export class Apis extends CappuccinosBase {
 
   async makeDocumentAll() {
     await Promise.all(
-      this.projectConfig.apis.map(apiName => this.makeDocument(apiName))
+      this.projectConfig.apis.map(api => this.makeDocument(api))
     );
   }
 
-  async makeDocument(apiName: string) {
-    const yaml = await this.mergeSwaggerFile(apiName);
+  async makeDocument(config: ApiConfig) {
+    const apiName = config.name;
+    const yaml = await this.mergeSwaggerFile(config);
     const path = `${this.buidDir}/${apiName}.swagger.yaml`;
     writeFileSync(path, YAML.stringify(yaml));
     this.logger.debug(yaml);
@@ -37,10 +38,20 @@ export class Apis extends CappuccinosBase {
     this.logger.info(`  # API document created        ${blue('api=')}${apiName}`);
   }
 
-  async mergeSwaggerFile(apiName: string) {
+  async mergeSwaggerFile(config: ApiConfig) {
+    const apiName = config.name;
     const swg = utils.loadYaml(`apis/${apiName}/swagger.yaml`);
     if (swg.paths === undefined) swg.paths = {};
     glob(`functions/${apiName}/**/api.yaml`).map(path => {
+      const paths = utils.loadYaml(path);
+      Object.keys(paths).map(key => {
+        if (swg.paths[key] === undefined) swg.paths[key] = {};
+        Object.keys(paths[key]).map(method => {
+          swg.paths[key][method] = paths[key][method];
+        });
+      });
+    });
+    glob(`apis/${apiName}/paths/*.yaml`).map(path => {
       const paths = utils.loadYaml(path);
       Object.keys(paths).map(key => {
         if (swg.paths[key] === undefined) swg.paths[key] = {};
@@ -83,12 +94,13 @@ export class Apis extends CappuccinosBase {
 
   async uploadSwaggerFiles() {
     await Promise.all(
-      this.projectConfig.apis.map(apiName => this.uploadSwaggerFile(apiName))
+      this.projectConfig.apis.map(api => this.uploadSwaggerFile(api))
     );
   }
 
-  async uploadSwaggerFile(apiName: string) {
-    const yaml = await this.mergeSwaggerFile(apiName);
+  async uploadSwaggerFile(config: ApiConfig) {
+    const apiName = config.name;
+    const yaml = await this.mergeSwaggerFile(config);
     utils.removeExamples(yaml);
     const path = `${this.buidDir}/${apiName}.swagger.yaml`;
     this.logger.debug(yaml);
@@ -98,6 +110,15 @@ export class Apis extends CappuccinosBase {
     let swagger = YAML.stringify(yaml);
     swagger = swagger.replace(/\$\{AWS::AccountId\}/g, accountId);
     swagger = swagger.replace(/\$\{AWS::Region\}/g, region);
+    if (config.environment) {
+      const keys = Object.keys(config.environment);
+      for (let i = 0, len = keys.length; i < len; i++) {
+        const key = keys[i];
+        this.logger.debug(`${key}, ${config.environment[key]}`);
+        const reg = new RegExp(`\\$\\{${key}\\}`, 'g');
+        swagger = swagger.replace(reg, config.environment[key]);
+      }
+    }
     this.logger.debug(`upload: ${path} => templates-${region}-${accountId}/apis/${apiName}.swagger.yaml`);
     const params = {
       Bucket: `templates-${region}-${accountId}`,
@@ -110,15 +131,15 @@ export class Apis extends CappuccinosBase {
 
   makeApiTemplateBody(): string {
     const resouces: any = {};
-    this.projectConfig.apis.map(apiName => {
-      resouces[apiName] = {
+    this.projectConfig.apis.map(api => {
+      resouces[api.name] = {
         Type: 'AWS::ApiGateway::RestApi',
         Properties: {
           Body: {
             'Fn::Transform': {
               Name: 'AWS::Include',
               Parameters: {
-                Location: `s3://templates-${this.awsConfig.region}-${this.awsConfig.account_id}/apis/${apiName}.swagger.yaml`
+                Location: `s3://templates-${this.awsConfig.region}-${this.awsConfig.account_id}/apis/${api.name}.swagger.yaml`
               }
             }
           }
@@ -136,7 +157,7 @@ export class Apis extends CappuccinosBase {
 
   async deployApiStages(stageName: string) {
     for (let i = 0, len = this.projectConfig.apis.length; i < len; i++ ) {
-      const apiName = this.projectConfig.apis[i];
+      const apiName = this.projectConfig.apis[i].name;
       await this.deployApiStage(apiName, stageName);
       await utils.sleep(500);
     }

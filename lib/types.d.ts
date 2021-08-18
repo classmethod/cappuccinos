@@ -9,7 +9,7 @@ export interface ProjectConfig {
   functions: FunctionsConfig;
   layers: LayersConfig[];
   shared: SharedConfig[];
-  apis: string[];
+  apis: ApiConfig[];
   websockets?: string[];
   state_machines: string[];
 }
@@ -55,6 +55,11 @@ export interface SharedConfig {
   build: string[];
   rebuild: string[];
   files: IFile[];
+}
+
+export interface ApiConfig {
+  name: string;
+  environment?: { [key: string]: string; };
 }
 
 export interface LayersConfig {
