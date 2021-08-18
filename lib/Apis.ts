@@ -222,6 +222,7 @@ export class Apis extends CappuccinosBase {
       paramsList.map(params => this.apigateway.getIntegration(params).promise())
     );
     const functions = result
+      .filter(i => (i.uri !== undefined) && (i.uri.indexOf(`:${this.awsConfig.account_id}:`) !== -1))
       .map(i => {
         if (i.uri === undefined) return undefined;
         const m = i.uri.match(/\:function\:([a-z0-9_]+)[\:\/]/);
