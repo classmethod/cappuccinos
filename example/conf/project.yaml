@@ -46,4 +46,4 @@ layers:
        source: node_modules/**
        destination: nodejs
 apis:
-  - api
+  - name: api
