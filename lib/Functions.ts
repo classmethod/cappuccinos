@@ -136,6 +136,7 @@ export class Functions extends CappuccinosBase {
       this.logger.info(`  # Function created     ${blue('function=')}${functionName}`);
     } else {
       await this.updateFunctionCode(functionName, codePath);
+      await utils.sleep(1000);
       await this.updateFunctionConfiguration(functionName, config);
       this.logger.info(`  # Function updated     ${blue('function=')}${functionName}`);
     }
