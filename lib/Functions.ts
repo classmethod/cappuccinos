@@ -133,13 +133,16 @@ export class Functions extends CappuccinosBase {
     this.logger.debug(JSON.stringify(currentFunction, null, 2));
     if (currentFunction === undefined) {
       await this.createFunction(functionName, config, codePath);
+      await this.waitForActive(functionName);
       this.logger.info(`  # Function created     ${blue('function=')}${functionName}`);
     } else {
       await this.updateFunctionCode(functionName, codePath);
-      await utils.sleep(1000);
+      await this.waitForUpdated(functionName);
       await this.updateFunctionConfiguration(functionName, config);
+      await this.waitForActive(functionName);
       this.logger.info(`  # Function updated     ${blue('function=')}${functionName}`);
     }
+    await utils.sleep(500);
     await this.addPermissions(functionName);
   }
 
@@ -440,5 +443,25 @@ export class Functions extends CappuccinosBase {
     this.logger.debug(JSON.stringify(result, null, 2));
   }
 
+  private async waitForExists(functionName: string) {
+    await this.lambda.waitFor('functionExists', {
+      FunctionName: functionName,
+    }).promise();
+    this.logger.debug(`function exists: ${functionName}`);
+  }
+
+  private async waitForActive(functionName: string) {
+    await this.lambda.waitFor('functionActive', {
+      FunctionName: functionName,
+    }).promise();
+    this.logger.debug(`function exists: ${functionName}`);
+  }
+
+  private async waitForUpdated(functionName: string) {
+    await this.lambda.waitFor('functionUpdated', {
+      FunctionName: functionName,
+    }).promise();
+    this.logger.debug(`function updated: ${functionName}`);
+  }
 
 }
