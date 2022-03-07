@@ -11,8 +11,14 @@ import { CappuccinosBase } from './CappuccinosBase'
 
 export class Apis extends CappuccinosBase {
 
+  private swaggerFile: string;
+  private strictPaths: boolean;
+
   constructor(env: string, options: any, logger: any, config: ProjectConfig, awsConfig: AwsConfig) {
     super(env, options, logger, config, awsConfig, path.resolve('./build/apis'));
+    this.swaggerFile = options.swaggerFile || 'swagger.yaml';
+    this.strictPaths = options.strictPaths !== false ? true : false;
+    this.logger.info(this.strictPaths);
   }
 
   async cleanup() {
@@ -40,12 +46,16 @@ export class Apis extends CappuccinosBase {
 
   async mergeSwaggerFile(config: ApiConfig) {
     const apiName = config.name;
-    const swg = utils.loadYaml(`apis/${apiName}/swagger.yaml`);
+    const swg = utils.loadYaml(`apis/${apiName}/${this.swaggerFile}`);
+    this.logger.info(`Swagger File: apis/${apiName}/${this.swaggerFile}`);
     if (swg.paths === undefined) swg.paths = {};
     glob(`functions/${apiName}/**/api.yaml`).map(path => {
       const paths = utils.loadYaml(path);
       Object.keys(paths).map(key => {
-        if (swg.paths[key] === undefined) swg.paths[key] = {};
+        if (swg.paths[key] === undefined) {
+          if (this.strictPaths) return;
+          swg.paths[key] = {};
+        }
         Object.keys(paths[key]).map(method => {
           swg.paths[key][method] = paths[key][method];
         });
@@ -54,7 +64,11 @@ export class Apis extends CappuccinosBase {
     glob(`apis/${apiName}/paths/*.yaml`).map(path => {
       const paths = utils.loadYaml(path);
       Object.keys(paths).map(key => {
-        if (swg.paths[key] === undefined) swg.paths[key] = {};
+        if (swg.paths[key] === undefined) {
+          if (this.strictPaths) return;
+          swg.paths[key] = {};
+        }
+
         Object.keys(paths[key]).map(method => {
           swg.paths[key][method] = paths[key][method];
         });

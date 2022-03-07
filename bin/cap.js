@@ -223,6 +223,8 @@ prog
   .argument('<env>', 'Enviroment', envArgValidator)
   .argument('[api]', 'target api to make document', apiArgValidator)
   .option('--ignore-profile', 'ignore aws profile')
+  .option('--swagger-file', 'specific swagger file name')
+  .option('--strict-paths', 'ignore aws profile')
   .action(async (args, options, logger) => {
     logger.info(`[Document API]`);
     const apis = await newApis(args.env, options, logger);
